@@ -1,0 +1,19 @@
+WHITESPACE = _{" "}
+
+int = { ASCII_DIGIT+ }
+
+decl = { var ~ nom_var ~  "=" ~ int }
+    var = { "var" }
+    nom_var = { ASCII_ALPHA_LOWER+ }
+
+expr = { decl ~ ";" }
+
+block = { expr ~ (expr)*}
+
+prog = {
+    SOI ~
+    block ~
+    EOI
+}
+
+
