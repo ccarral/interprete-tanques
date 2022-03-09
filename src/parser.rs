@@ -18,4 +18,13 @@ mod test {
         let decl_parse_result = InterpreteTanques::parse(Rule::expr, "var x = 1;");
         assert!(decl_parse_result.is_ok());
     }
+
+    #[test]
+    pub fn test_prog() {
+        let prog = InterpreteTanques::parse(Rule::prog, "var x = 1;\nvar wey = 4;");
+        assert!(prog.is_ok());
+
+        let prog = InterpreteTanques::parse(Rule::prog, "\nvar x = 1;\n\n");
+        assert!(prog.is_ok());
+    }
 }

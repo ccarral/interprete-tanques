@@ -1,4 +1,4 @@
-WHITESPACE = _{" "}
+WHITESPACE = _{" " | "\n"}
 
 int = { ASCII_DIGIT+ }
 
