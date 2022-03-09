@@ -2,17 +2,17 @@ WHITESPACE = _{" " | "\n"}
 
 int = { ASCII_DIGIT+ }
 
-decl = { var ~ nom_var ~  "=" ~ int }
+decl = { var ~ nom_var ~  "=" ~ int ~ ";" }
     var = { "var" }
     nom_var = { ASCII_ALPHA_LOWER+ }
 
-expr = { decl ~ ";" }
+expr = { decl }
 
-block = { expr ~ (expr)*}
+bloque = { (expr)* ~ expr?}
 
-prog = {
+prog = _{
     SOI ~
-    block ~
+    bloque ~
     EOI
 }
 

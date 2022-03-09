@@ -11,9 +11,9 @@ mod test {
 
     #[test]
     pub fn test_decl() {
-        let decl_parse_result = Interprete::parse(Rule::decl, "var x=1");
+        let decl_parse_result = Interprete::parse(Rule::decl, "var x=1;");
         assert!(decl_parse_result.is_ok());
-        let decl_parse_result = Interprete::parse(Rule::decl, "var x = 1 ");
+        let decl_parse_result = Interprete::parse(Rule::decl, "var x = 1;");
         assert!(decl_parse_result.is_ok());
         let decl_parse_result = Interprete::parse(Rule::expr, "var x = 1;");
         assert!(decl_parse_result.is_ok());
