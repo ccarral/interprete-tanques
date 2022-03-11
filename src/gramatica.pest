@@ -1,6 +1,6 @@
 WHITESPACE = _{" " | "\n"}
 
-int = { ASCII_DIGIT+ }
+int = { ("-")* ~ ASCII_DIGIT+ }
 
 decl = { "var" ~ nom_var ~  "=" ~ int ~ ";" }
     nom_var = @{ ASCII_ALPHA_LOWER+ }

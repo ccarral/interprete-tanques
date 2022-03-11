@@ -57,11 +57,11 @@ mod test {
 
     #[test]
     pub fn test_var_decl() {
-        let mut interprete = Interprete::new("var x = 1;var y  =33;").unwrap();
+        let mut interprete = Interprete::new("var x = 1;var y =-33;").unwrap();
         interprete.step_inst();
         assert_eq!(interprete.get_var_value("x"), Some(&1));
         assert_eq!(interprete.get_var_value("y"), None);
         interprete.step_inst();
-        assert_eq!(interprete.get_var_value("y"), Some(&33));
+        assert_eq!(interprete.get_var_value("y"), Some(&-33));
     }
 }
