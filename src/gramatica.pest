@@ -1,8 +1,10 @@
 WHITESPACE = _{" " | "\n"}
 
-int = { ("-")* ~ ASCII_DIGIT+ }
+expr = { int  | expr_par}
+    int = @{ ("-")* ~ ASCII_DIGIT+ }
+    expr_par = {"(" ~ expr ~")"}
 
-decl = { "var" ~ nom_var ~  "=" ~ int ~ ";" }
+decl = { "var" ~ nom_var ~  "=" ~ expr ~ ";" }
     nom_var = @{ ASCII_ALPHA_LOWER+ }
 
 inst = { decl }
