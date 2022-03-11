@@ -26,10 +26,9 @@ impl<'a> Interprete<'a> {
 
     fn parse_node(&mut self, pair: Pair<Rule>) {
         match pair.as_rule() {
-            Rule::expr => {
-                let expr_inner = pair.into_inner().next().unwrap();
-                // println!("{expr_inner}");
-                self.parse_node(expr_inner);
+            Rule::inst => {
+                let inst_inner = pair.into_inner().next().unwrap();
+                self.parse_node(inst_inner);
             }
             Rule::decl => {
                 let mut decl_pairs = pair.into_inner();

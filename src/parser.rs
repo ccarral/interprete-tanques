@@ -15,7 +15,7 @@ mod test {
         assert!(decl_parse_result.is_ok());
         let decl_parse_result = ParserTanques::parse(Rule::decl, "var x = 1;");
         assert!(decl_parse_result.is_ok());
-        let decl_parse_result = ParserTanques::parse(Rule::expr, "var x = 1;");
+        let decl_parse_result = ParserTanques::parse(Rule::inst, "var x = 1;");
         assert!(decl_parse_result.is_ok());
     }
 
