@@ -39,19 +39,23 @@ impl Scope {
 mod test {
     use super::*;
     #[test]
-    pub fn test_var_decl() {
+    pub fn test_scope() {
         let mut scope = Scope::new();
         // This would be equivalent to
         // var pepe = 12;
         // var i = 5;
         // si(i > 0){
         //   var pepe = 23;
+        //   pepe = 49;
         // }
         scope.set_var("pepe", 12);
         scope.add();
         scope.set_var("pepe", 23);
         let value = scope.get_var_value("pepe");
         assert_eq!(value, Some(23));
+        scope.set_var("pepe", 49);
+        let value = scope.get_var_value("pepe");
+        assert_eq!(value, Some(49));
         scope.drop();
         let value = scope.get_var_value("pepe");
         assert_eq!(value, Some(12));
