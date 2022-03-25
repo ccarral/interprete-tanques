@@ -1,6 +1,7 @@
+mod error;
 mod interprete;
 mod parser;
-mod error;
+mod scope;
 fn main() {
     println!("Hello world!");
 }
