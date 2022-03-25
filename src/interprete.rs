@@ -9,7 +9,6 @@ use std::collections::HashMap;
 pub struct Interprete<'a> {
     pairs: Pairs<'a, Rule>,
     vars: HashMap<String, isize>,
-    expr_stack: Vec<isize>,
 }
 
 impl<'a> Interprete<'a> {
@@ -19,11 +18,7 @@ impl<'a> Interprete<'a> {
             println!("{pair}");
         }
         let vars = HashMap::new();
-        Ok(Self {
-            pairs,
-            vars,
-            expr_stack: Vec::new(),
-        })
+        Ok(Self { pairs, vars })
     }
 
     pub fn get_var_value(&self, varname: &str) -> Option<&isize> {
@@ -42,27 +37,13 @@ impl<'a> Interprete<'a> {
                 let mut decl_pairs = pair.into_inner();
                 let var_name = decl_pairs.next().unwrap().as_str();
                 let expr = decl_pairs.next().unwrap();
-                // self.parse_node(expr)?;
                 let valor = eval(expr.into_inner());
-                // let valor = self.expr_stack.pop().unwrap();
                 self.vars.insert(var_name.into(), valor);
-            }
-            Rule::expr => {
-                let mut pairs = pair.into_inner();
-                let expr_pairs = pairs.next().unwrap();
-
-                //Para este punto, ya tenemos la evaluación de la expresión izquierda en el stack
-                //Ahora verificamos si hay una operación y operando
             }
             Rule::expr_par => {
                 let expr_par_inner = pair.into_inner().next().unwrap();
                 self.parse_node(expr_par_inner)?;
             }
-            Rule::int => {
-                let valor: isize = pair.as_str().parse().unwrap();
-                self.expr_stack.push(valor);
-            }
-            Rule::EOI => {}
 
             _ => unreachable!(),
         }
@@ -123,7 +104,6 @@ mod test {
 
     #[test]
     pub fn test_expr() {
-        // let mut interprete = Interprete::new("var x = 1  + 2; var y = 1 + 2 - 3").unwrap();
         let mut interprete =
             Interprete::new("var x = 1 + 2;var y = 1 - 2 ;var z = 4 * 2; var w = 4/(2*2);")
                 .unwrap();
