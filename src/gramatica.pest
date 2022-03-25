@@ -1,8 +1,10 @@
 WHITESPACE = _{" " | "\n"}
 
-oper = _{ suma | resta }
+oper = _{ suma | resta | mult | div}
     suma = { "+" }
     resta = { "-" }
+    mult = { "*" }
+    div = { "/" }
 
 
 expr = { term ~ (oper ~ term)* }

@@ -80,11 +80,14 @@ impl<'a> Interprete<'a> {
 fn eval(expr: Pairs<Rule>) -> isize {
     let climber = PrecClimber::new(vec![
         Operator::new(Rule::suma, Assoc::Left) | Operator::new(Rule::resta, Assoc::Left),
+        Operator::new(Rule::mult, Assoc::Left) | Operator::new(Rule::div, Assoc::Left),
     ]);
 
     let infix = |lhs: isize, op: Pair<Rule>, rhs: isize| match op.as_rule() {
         Rule::suma => lhs + rhs,
         Rule::resta => lhs - rhs,
+        Rule::mult => lhs * rhs,
+        Rule::div => lhs / rhs,
         _ => unreachable!(),
     };
 
@@ -121,12 +124,16 @@ mod test {
     #[test]
     pub fn test_expr() {
         // let mut interprete = Interprete::new("var x = 1  + 2; var y = 1 + 2 - 3").unwrap();
-        let mut interprete = Interprete::new("var x = 1 + 2;var y = 1 - 2;var z = 1-2+3;").unwrap();
+        let mut interprete =
+            Interprete::new("var x = 1 + 2;var y = 1 - 2 ;var z = 4 * 2; var w = 4/(2*2);")
+                .unwrap();
         interprete.step_inst();
         assert_eq!(interprete.get_var_value("x"), Some(&3));
         interprete.step_inst();
         assert_eq!(interprete.get_var_value("y"), Some(&-1));
         interprete.step_inst();
-        assert_eq!(interprete.get_var_value("z"), Some(&2));
+        assert_eq!(interprete.get_var_value("z"), Some(&8));
+        interprete.step_inst();
+        assert_eq!(interprete.get_var_value("w"), Some(&1));
     }
 }
