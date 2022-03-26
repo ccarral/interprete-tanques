@@ -18,7 +18,7 @@ impl Scope {
     }
 
     /// Get `var_name`'s last defined value.
-    pub fn get_var_value(&mut self, var_name: &str) -> Option<isize> {
+    pub fn get_var_value(&self, var_name: &str) -> Option<isize> {
         for map in self.map_stack.iter().rev() {
             if let Some(value) = map.get(var_name.into()) {
                 return Some(*value);

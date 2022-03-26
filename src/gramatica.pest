@@ -1,25 +1,46 @@
-WHITESPACE = _{" " | "\n"}
+WHITESPACE = _{ " " | "\n" }
 
-oper = _{ suma | resta | mult | div}
+oper = _{ suma | resta | mult | div }
     suma = { "+" }
     resta = { "-" }
     mult = { "*" }
     div = { "/" }
 
-
 expr = { term ~ (oper ~ term)* }
 
-term = _{ int  | expr_par}
+term = _{ int  | expr_par | nom_var }
 
 int = @{ ("-")* ~ ASCII_DIGIT+ }
 
 expr_par = {"(" ~ expr ~")"}
 
+comp = _{ men | men_ig | may | may_ig | ig }
+    men = { "<" }
+    men_ig = {"<="}
+    may = { ">" }
+    may_ig = {">="}
+    ig = {"=="}
+
+oper_logic = { or | and }
+    or = { "||" }
+    and = { "&&" }
+
+expr_par_logic = {"(" ~ expr_logic ~ ")"}
+
+val = { int | expr | nom_var }
+
+comp_logic = { (val ~ comp ~ val) }
+
+term_logic = { comp_logic | expr_par_logic }
+
+expr_logic = { term_logic ~ (oper_logic ~ term_logic)* }
 
 decl = { "var" ~ nom_var ~  "=" ~ expr ~ ";" }
     nom_var = @{ ASCII_ALPHA_LOWER+ }
 
 inst = { decl }
+
+bloque_si = { "si" ~ "(" ~ expr_logic ~ ")" ~ "{" ~ bloque ~ "}"}
 
 bloque = _{ (inst)* ~ inst?}
 
@@ -28,5 +49,3 @@ prog = _{
     bloque ~
     EOI
 }
-
-
