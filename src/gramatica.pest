@@ -14,16 +14,17 @@ int = @{ ("-")* ~ ASCII_DIGIT+ }
 
 expr_par = {"(" ~ expr ~")"}
 
-comp = _{ men | men_ig | may | may_ig | ig }
-    men = { "<" }
-    men_ig = {"<="}
-    may = { ">" }
-    may_ig = {">="}
-    ig = {"=="}
+comp = _{ men | men_ig | may | may_ig | ig | no_ig }
+    men = @{ "<" }
+    men_ig = @{"<="}
+    may = @{ ">" }
+    may_ig = @{">="}
+    ig = @{"=="}
+    no_ig = @{"!="}
 
-oper_logic = { or | and }
-    or = { "||" }
-    and = { "&&" }
+oper_logic = _{ or | and }
+    or = @{ "||" }
+    and = @{ "&&" }
 
 expr_par_logic = {"(" ~ expr_logic ~ ")"}
 
@@ -36,7 +37,8 @@ term_logic = { comp_logic | expr_par_logic }
 expr_logic = { term_logic ~ (oper_logic ~ term_logic)* }
 
 decl = { "var" ~ nom_var ~  "=" ~ expr ~ ";" }
-    nom_var = @{ ASCII_ALPHA_LOWER+ }
+
+nom_var = @{ ASCII_ALPHA_LOWER+ }
 
 inst = { decl }
 

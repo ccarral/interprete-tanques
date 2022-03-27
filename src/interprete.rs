@@ -103,32 +103,61 @@ fn eval(expr: Pairs<Rule>, scope: &Scope) -> Result<isize, ErrorInterprete> {
     climber.climb(expr, primary, infix)
 }
 
-fn eval_logic(expr: Pairs<Rule>) -> bool {
+fn eval_logic(expr: Pairs<Rule>, scope: &Scope) -> Result<bool, ErrorInterprete> {
     let climber = PrecClimber::new(vec![
         Operator::new(Rule::men, Assoc::Left)
             | Operator::new(Rule::may, Assoc::Left)
             | Operator::new(Rule::men_ig, Assoc::Left)
             | Operator::new(Rule::may_ig, Assoc::Left)
-            | Operator::new(Rule::ig, Assoc::Left),
+            | Operator::new(Rule::ig, Assoc::Left)
+            | Operator::new(Rule::no_ig, Assoc::Left),
+        Operator::new(Rule::or, Assoc::Left),
+        Operator::new(Rule::and, Assoc::Left),
     ]);
 
-    let infix = |lhs: bool, op: Pair<Rule>, rhs: bool| match op.as_rule() {
-        _ => unreachable!(),
-    };
+    let infix =
+        |lhs: Result<bool, ErrorInterprete>, op: Pair<Rule>, rhs: Result<bool, ErrorInterprete>| {
+            match (lhs, rhs) {
+                (Ok(lhs), Ok(rhs)) => match op.as_rule() {
+                    Rule::or => Ok(lhs || rhs),
+                    Rule::and => Ok(lhs && rhs),
+                    _ => unreachable!(),
+                },
+                (e, Ok(_)) => e,
+                (Ok(_), e) => e,
+                (e, Err(_)) => e,
+            }
+        };
 
     let primary = |pair: Pair<Rule>| match pair.as_rule() {
         Rule::expr_par_logic => {
             let expr_inner = pair.into_inner();
-            eval_logic(expr_inner)
+            eval_logic(expr_inner, scope)
         }
-        Rule::expr_logic => eval_logic(pair.into_inner()),
-        Rule::term_logic => eval_logic(pair.into_inner()),
+        Rule::expr_logic => eval_logic(pair.into_inner(), scope),
+        Rule::term_logic => eval_logic(pair.into_inner(), scope),
         Rule::comp_logic => {
             let mut pairs = pair.into_inner();
-            let lhs = pairs.next().unwrap();
-            let op = pairs.next().unwrap().as_rule();
-            let rhs = pairs.next().unwrap().as_rule();
-            true
+            let lhs = {
+                let pairs = pairs.next().unwrap().into_inner();
+                eval(pairs, scope)
+            }?;
+            let op = match pairs.next().unwrap().as_rule() {
+                Rule::men => |lhs: isize, rhs: isize| lhs < rhs,
+                Rule::men_ig => |lhs: isize, rhs: isize| lhs <= rhs,
+                Rule::may => |lhs: isize, rhs: isize| lhs > rhs,
+                Rule::may_ig => |lhs: isize, rhs: isize| lhs >= rhs,
+                Rule::ig => |lhs: isize, rhs: isize| lhs == rhs,
+                Rule::no_ig => |lhs: isize, rhs: isize| lhs != rhs,
+                _ => unreachable!(),
+            };
+
+            let rhs = {
+                let pairs = pairs.next().unwrap().into_inner();
+                eval(pairs, scope)
+            }?;
+
+            Ok(op(lhs, rhs))
         }
         r => {
             dbg!(r);
@@ -142,16 +171,6 @@ fn eval_logic(expr: Pairs<Rule>) -> bool {
 #[cfg(test)]
 mod test {
     use super::*;
-
-    #[test]
-    pub fn test_var_decl() {
-        let mut interprete = Interprete::new("var x =( 1 );var y = -33 ;").unwrap();
-        interprete.step_inst().unwrap();
-        assert_eq!(interprete.get_var_value("x"), Some(1));
-        assert_eq!(interprete.get_var_value("y"), None);
-        interprete.step_inst().unwrap();
-        assert_eq!(interprete.get_var_value("y"), Some(-33));
-    }
 
     #[test]
     pub fn test_expr() {
@@ -171,5 +190,50 @@ mod test {
         assert_eq!(interprete.get_var_value("a"), Some(11));
         let res = interprete.step_inst();
         assert!(res.is_err());
+    }
+
+    #[test]
+    pub fn test_expr_logic() {
+        let eval_expr = |expr: &str, scope: &Scope| {
+            let pairs = ParserTanques::parse(Rule::expr_logic, expr).unwrap();
+            eval_logic(pairs, &scope).unwrap()
+        };
+
+        let mut scope = Scope::new();
+
+        let val = eval_expr("2 == 1", &scope);
+        assert!(!val);
+
+        let val = eval_expr("1 < 0", &scope);
+        assert!(!val);
+
+        let val = eval_expr("4 == 4", &scope);
+        assert!(val);
+
+        let val = eval_expr("4 != 3", &scope);
+        assert!(val);
+
+        let val = eval_expr("1 < 2 && 6 == 7", &scope);
+        assert!(!val);
+
+        let val = eval_expr("1 < 2 && 6 == 6 && 7 != 7", &scope);
+        assert!(!val);
+
+        let val = eval_expr("1 < 2 || 6 == 6 && 7 != 7", &scope);
+        assert!(val);
+
+        scope.set_var("x", 8);
+        let val = eval_expr("x == 8", &scope);
+        assert!(val);
+
+        let val = eval_expr("x != 8", &scope);
+        assert!(!val);
+
+        scope.set_var("y", 9);
+        let val = eval_expr("x < y", &scope);
+        assert!(val);
+
+        let val = eval_expr("x == y", &scope);
+        assert!(!val);
     }
 }
