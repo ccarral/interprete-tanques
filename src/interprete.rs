@@ -262,10 +262,16 @@ mod test {
 
     #[test]
     fn test_si() {
-        let mut interprete = Interprete::new("var x = 1; si(x != 0){ x = x + 2; }").unwrap();
+        let mut interprete =
+            Interprete::new("var x = 1; si((x != 0) || (x > 10)){ x = x + 2; }").unwrap();
         interprete.step_inst().unwrap();
         assert_eq!(interprete.get_var_value("x"), Some(1));
         interprete.step_inst().unwrap();
         assert_eq!(interprete.get_var_value("x"), Some(3));
+
+        let mut interprete = Interprete::new("var x = 1; si( x == 0 ){ x = x + 2; }").unwrap();
+        interprete.step_inst().unwrap();
+        interprete.step_inst().unwrap();
+        assert_eq!(interprete.get_var_value("x"), Some(1));
     }
 }
