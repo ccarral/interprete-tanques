@@ -42,7 +42,7 @@ decl = { "var" ~ nom_var ~  "=" ~ expr ~ ";" }
 
 asig = { nom_var ~ "=" ~ expr ~ ";" }
 
-inst = { decl | asig }
+inst = { decl | asig | bloque_si }
 
 bloque_si = { "si" ~ "(" ~ expr_logic ~ ")" ~ "{" ~ bloque ~ "}"}
 

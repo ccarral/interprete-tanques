@@ -47,9 +47,17 @@ impl<'a> Interprete<'a> {
                 let valor = eval(expr.into_inner(), &self.scope)?;
                 self.scope.set_var(var_name.into(), valor);
             }
-            Rule::expr_par => {
-                let expr_par_inner = pair.into_inner().next().unwrap();
-                self.parse_node(expr_par_inner)?;
+            Rule::bloque_si => {
+                let mut pairs = pair.into_inner();
+                let expr_logic = pairs.next().unwrap();
+                let expr_val = dbg!(eval_logic(expr_logic.into_inner(), &self.scope))?;
+                if dbg!(expr_val) {
+                    self.scope.add();
+                    let instrucciones = pairs.next().unwrap().into_inner();
+                    for instruccion in instrucciones {
+                        self.parse_node(instruccion)?;
+                    }
+                }
             }
 
             _ => unreachable!(),
@@ -250,5 +258,14 @@ mod test {
         assert_eq!(interprete.get_var_value("x"), Some(1));
         interprete.step_inst().unwrap();
         assert_eq!(interprete.get_var_value("x"), Some(2));
+    }
+
+    #[test]
+    fn test_si() {
+        let mut interprete = Interprete::new("var x = 1; si(x != 0){ x = x + 2; }").unwrap();
+        interprete.step_inst().unwrap();
+        assert_eq!(interprete.get_var_value("x"), Some(1));
+        interprete.step_inst().unwrap();
+        assert_eq!(interprete.get_var_value("x"), Some(3));
     }
 }
