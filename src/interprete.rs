@@ -5,7 +5,6 @@ use pest::error::Error;
 use pest::iterators::{Pair, Pairs};
 use pest::prec_climber::*;
 use pest::Parser;
-use std::collections::HashMap;
 
 pub struct Interprete<'a> {
     pairs: Pairs<'a, Rule>,
@@ -38,6 +37,13 @@ impl<'a> Interprete<'a> {
                 let mut decl_pairs = pair.into_inner();
                 let var_name = decl_pairs.next().unwrap().as_str();
                 let expr = decl_pairs.next().unwrap();
+                let valor = eval(expr.into_inner(), &self.scope)?;
+                self.scope.set_var(var_name.into(), valor);
+            }
+            Rule::asig => {
+                let mut asig_pairs = pair.into_inner();
+                let var_name = asig_pairs.next().unwrap().as_str();
+                let expr = asig_pairs.next().unwrap();
                 let valor = eval(expr.into_inner(), &self.scope)?;
                 self.scope.set_var(var_name.into(), valor);
             }
@@ -235,5 +241,14 @@ mod test {
 
         let val = eval_expr("x == y", &scope);
         assert!(!val);
+    }
+
+    #[test]
+    fn test_asig() {
+        let mut interprete = Interprete::new("var x = 1;x = x + 1;").unwrap();
+        interprete.step_inst().unwrap();
+        assert_eq!(interprete.get_var_value("x"), Some(1));
+        interprete.step_inst().unwrap();
+        assert_eq!(interprete.get_var_value("x"), Some(2));
     }
 }

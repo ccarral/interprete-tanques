@@ -36,11 +36,13 @@ term_logic = { comp_logic | expr_par_logic }
 
 expr_logic = { term_logic ~ (oper_logic ~ term_logic)* }
 
-decl = { "var" ~ nom_var ~  "=" ~ expr ~ ";" }
-
 nom_var = @{ ASCII_ALPHA_LOWER+ }
 
-inst = { decl }
+decl = { "var" ~ nom_var ~  "=" ~ expr ~ ";" }
+
+asig = { nom_var ~ "=" ~ expr ~ ";" }
+
+inst = { decl | asig }
 
 bloque_si = { "si" ~ "(" ~ expr_logic ~ ")" ~ "{" ~ bloque ~ "}"}
 
