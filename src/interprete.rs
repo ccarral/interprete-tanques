@@ -17,7 +17,7 @@ pub struct TankStatus {
     ammo_big: usize,
 }
 
-#[derive(Debug, Eq, PartialEq)]
+#[derive(Debug, Eq, PartialEq, Clone)]
 pub enum ExecutionContext<'a> {
     Block,
     IfBlock,
@@ -25,7 +25,7 @@ pub enum ExecutionContext<'a> {
 }
 
 pub struct Interpreter<'a> {
-    exec_stack: Vec<Pairs<'a, Rule>>,
+    exec_stack: Vec<(Pairs<'a, Rule>, ExecutionContext<'a>)>,
     scope: Scope,
     ctx: ExecutionContext<'a>,
 }
@@ -35,7 +35,7 @@ impl<'a> Interpreter<'a> {
         let pairs = ParserTanques::parse(Rule::prog, prog)?;
         let scope = Scope::new();
         Ok(Self {
-            exec_stack: vec![pairs],
+            exec_stack: vec![(pairs, ExecutionContext::Block)],
             scope,
             ctx: ExecutionContext::Block,
         })
@@ -80,12 +80,12 @@ impl<'a> Interpreter<'a> {
                     self.scope.add();
                     // Debería de tener el bloque
                     let instrucciones = pairs.next().unwrap().into_inner();
-                    self.exec_stack.push(instrucciones);
+                    self.exec_stack
+                        .push((instrucciones, ExecutionContext::IfBlock));
                     self.ctx = ExecutionContext::IfBlock;
                     self.step_inst()?;
                 }
             }
-            Rule::EOI => {}
 
             _ => unreachable!(),
         }
@@ -94,21 +94,20 @@ impl<'a> Interpreter<'a> {
     }
 
     pub fn step_inst(&mut self) -> Result<(), ErrorInterprete> {
-        let mut current_exec_block = self.exec_stack.pop().unwrap();
+        let (mut current_exec_block, ctx) = self.exec_stack.pop().unwrap();
         if self.ctx == ExecutionContext::IfBlock {
             println!("IFBLOCK");
             dbg!(&current_exec_block);
         }
         if let Some(pair) = dbg!(current_exec_block.next()) {
-            self.exec_stack.push(current_exec_block);
+            self.exec_stack.push((current_exec_block, ctx));
             self.parse_node(pair)?;
         } else {
             // Reached the end of the iterator, check for condition
             println!("End of iterator!");
-            match &self.ctx {
+            match ctx {
                 ExecutionContext::Block => {}
                 ExecutionContext::IfBlock => {
-                    self.ctx = ExecutionContext::Block;
                     self.scope.drop();
                     self.step_inst()?;
                 }
@@ -122,10 +121,11 @@ impl<'a> Interpreter<'a> {
                         self.step_inst()?;
                     } else {
                         // Loop  continues, push another pairs object to the stack
-                        let pairs = self.exec_stack.pop().unwrap();
+                        let (pairs, ctx) = self.exec_stack.pop().unwrap();
                         let pairs_clone = pairs.clone();
-                        self.exec_stack.push(pairs);
-                        self.exec_stack.push(pairs_clone);
+                        let ctx_clone = ctx.clone();
+                        self.exec_stack.push((pairs, ctx));
+                        self.exec_stack.push((pairs_clone, ctx_clone));
                     }
                 }
             }

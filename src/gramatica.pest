@@ -14,13 +14,13 @@ int = @{ ("-")* ~ ASCII_DIGIT+ }
 
 expr_par = {"(" ~ expr ~")"}
 
-comp = _{ men | men_ig | may | may_ig | ig | no_ig }
+comp = _{ men_ig | men  | may_ig | may | ig | no_ig }
     men = @{ "<" }
-    men_ig = @{"<="}
+    men_ig = @{ "<" ~ "=" }
     may = @{ ">" }
-    may_ig = @{">="}
-    ig = @{"=="}
-    no_ig = @{"!="}
+    may_ig = @{ ">" ~ "=" }
+    ig = @{ "==" }
+    no_ig = @{  "!=" }
 
 oper_logic = _{ or | and }
     or = @{ "||" }

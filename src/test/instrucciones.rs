@@ -51,7 +51,10 @@ pub fn test_expr_logic() {
     let val = eval_expr("1 < 2 && 6 == 6 && 7 != 7", &scope);
     assert!(!val);
 
-    let val = eval_expr("1 < 2 || 6 == 6 && 7 != 7", &scope);
+    let val = eval_expr("1 < 2 || 6 >= 6 && 7 != 7", &scope);
+    assert!(val);
+
+    let val = eval_expr("1 <= 2", &scope);
     assert!(val);
 
     scope.set_var("x", 8);
@@ -80,9 +83,16 @@ fn test_asig() {
 
 #[test]
 fn test_si() {
-    let mut interprete =
-        Interpreter::new("var x = 1; si(x == 1){ x = x + 2; x = x + 4; } var y = 2; x = 10;")
-            .unwrap();
+    let mut interprete = Interpreter::new(
+        "var x = 1; 
+            si(x == 1){ 
+                x = x + 2; 
+                x = x + 4; 
+            } 
+            var y = 2; 
+            x = 10;",
+    )
+    .unwrap();
     interprete.step_inst().unwrap();
     assert_eq!(interprete.get_var_value("x"), Some(1));
 
@@ -94,6 +104,34 @@ fn test_si() {
 
     interprete.step_inst().unwrap();
     assert_eq!(interprete.get_var_value("y"), Some(2));
+    assert_eq!(interprete.get_var_value("x"), Some(1));
+
+    interprete.step_inst().unwrap();
+    assert_eq!(interprete.get_var_value("x"), Some(10));
+
+    let mut interprete = Interpreter::new(
+        "var x = 1; 
+        si(x == 1){ 
+            x = x + 2; 
+            si( x <= 3 ){ 
+                x = 100; 
+            } 
+        } 
+        var y = 2; 
+        x = 10;",
+    )
+    .unwrap();
+
+    interprete.step_inst().unwrap();
+    assert_eq!(interprete.get_var_value("x"), Some(1));
+
+    interprete.step_inst().unwrap();
+    assert_eq!(interprete.get_var_value("x"), Some(3));
+
+    interprete.step_inst().unwrap();
+    assert_eq!(interprete.get_var_value("x"), Some(100));
+
+    interprete.step_inst().unwrap();
     assert_eq!(interprete.get_var_value("x"), Some(1));
 
     interprete.step_inst().unwrap();
