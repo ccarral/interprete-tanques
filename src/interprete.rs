@@ -6,32 +6,56 @@ use pest::iterators::{Pair, Pairs};
 use pest::prec_climber::*;
 use pest::Parser;
 
-pub struct Interprete<'a> {
-    pairs: Pairs<'a, Rule>,
-    scope: Scope,
+pub struct TankStatus {
+    // (x,y)
+    pos: (usize, usize),
+    // 0 - 100
+    health: usize,
+    // if tank just shot
+    shot: bool,
+    ammo_small: usize,
+    ammo_big: usize,
 }
 
-impl<'a> Interprete<'a> {
+#[derive(Debug, Eq, PartialEq)]
+pub enum ExecutionContext<'a> {
+    Block,
+    IfBlock,
+    While(Pair<'a, Rule>),
+}
+
+pub struct Interpreter<'a> {
+    exec_stack: Vec<Pairs<'a, Rule>>,
+    scope: Scope,
+    ctx: ExecutionContext<'a>,
+}
+
+impl<'a> Interpreter<'a> {
     pub fn new(prog: &'a str) -> Result<Self, Error<Rule>> {
         let pairs = ParserTanques::parse(Rule::prog, prog)?;
-        for pair in pairs.clone() {
-            println!("{pair}");
-        }
         let scope = Scope::new();
-        Ok(Self { pairs, scope })
+        Ok(Self {
+            exec_stack: vec![pairs],
+            scope,
+            ctx: ExecutionContext::Block,
+        })
     }
 
     pub fn get_var_value(&self, varname: &str) -> Option<isize> {
         self.scope.get_var_value(&varname)
     }
 
-    fn parse_node(&mut self, pair: Pair<Rule>) -> Result<(), ErrorInterprete> {
+    fn parse_node(&mut self, pair: Pair<'a, Rule>) -> Result<(), ErrorInterprete> {
         println!("Descending");
         dbg!(&pair.as_rule());
         match pair.as_rule() {
             Rule::inst => {
                 let inst_inner = pair.into_inner().next().unwrap();
                 self.parse_node(inst_inner)?;
+            }
+            Rule::bloque => {
+                let bloque_inner = pair.into_inner().next().unwrap();
+                self.parse_node(bloque_inner)?;
             }
             Rule::decl => {
                 let mut decl_pairs = pair.into_inner();
@@ -49,16 +73,19 @@ impl<'a> Interprete<'a> {
             }
             Rule::bloque_si => {
                 let mut pairs = pair.into_inner();
+                println!("Pares si:");
                 let expr_logic = pairs.next().unwrap();
-                let expr_val = dbg!(eval_logic(expr_logic.into_inner(), &self.scope))?;
-                if dbg!(expr_val) {
+                let expr_val = eval_logic(expr_logic.into_inner(), &self.scope)?;
+                if expr_val {
                     self.scope.add();
+                    // Debería de tener el bloque
                     let instrucciones = pairs.next().unwrap().into_inner();
-                    for instruccion in instrucciones {
-                        self.parse_node(instruccion)?;
-                    }
+                    self.exec_stack.push(instrucciones);
+                    self.ctx = ExecutionContext::IfBlock;
+                    self.step_inst()?;
                 }
             }
+            Rule::EOI => {}
 
             _ => unreachable!(),
         }
@@ -67,8 +94,41 @@ impl<'a> Interprete<'a> {
     }
 
     pub fn step_inst(&mut self) -> Result<(), ErrorInterprete> {
-        if let Some(pair) = self.pairs.next() {
+        let mut current_exec_block = self.exec_stack.pop().unwrap();
+        if self.ctx == ExecutionContext::IfBlock {
+            println!("IFBLOCK");
+            dbg!(&current_exec_block);
+        }
+        if let Some(pair) = dbg!(current_exec_block.next()) {
+            self.exec_stack.push(current_exec_block);
             self.parse_node(pair)?;
+        } else {
+            // Reached the end of the iterator, check for condition
+            println!("End of iterator!");
+            match &self.ctx {
+                ExecutionContext::Block => {}
+                ExecutionContext::IfBlock => {
+                    self.ctx = ExecutionContext::Block;
+                    self.scope.drop();
+                    self.step_inst()?;
+                }
+                ExecutionContext::While(p) => {
+                    let pair = p.clone();
+                    let pairs = pair.into_inner();
+                    let expr_val = eval_logic(pairs, &self.scope)?;
+                    if !expr_val {
+                        // Loop ends, pop the cloned pairs object
+                        self.exec_stack.pop();
+                        self.step_inst()?;
+                    } else {
+                        // Loop  continues, push another pairs object to the stack
+                        let pairs = self.exec_stack.pop().unwrap();
+                        let pairs_clone = pairs.clone();
+                        self.exec_stack.push(pairs);
+                        self.exec_stack.push(pairs_clone);
+                    }
+                }
+            }
         }
         Ok(())
     }
@@ -188,7 +248,7 @@ mod test {
 
     #[test]
     pub fn test_expr() {
-        let mut interprete = Interprete::new(
+        let mut interprete = Interpreter::new(
             "var x = 1 + 2;var y = 1 - 2 ;var z = 4 * 2; var w = 4/(2*2); var a = w + 10; var b = n + 1;",
         )
         .unwrap();
@@ -253,7 +313,7 @@ mod test {
 
     #[test]
     fn test_asig() {
-        let mut interprete = Interprete::new("var x = 1;x = x + 1;").unwrap();
+        let mut interprete = Interpreter::new("var x = 1;x = x + 1;").unwrap();
         interprete.step_inst().unwrap();
         assert_eq!(interprete.get_var_value("x"), Some(1));
         interprete.step_inst().unwrap();
@@ -263,15 +323,22 @@ mod test {
     #[test]
     fn test_si() {
         let mut interprete =
-            Interprete::new("var x = 1; si((x != 0) || (x > 10)){ x = x + 2; }").unwrap();
+            Interpreter::new("var x = 1; si(x == 1){ x = x + 2; x = x + 4; } var y = 2; x = 10;")
+                .unwrap();
         interprete.step_inst().unwrap();
         assert_eq!(interprete.get_var_value("x"), Some(1));
+
         interprete.step_inst().unwrap();
         assert_eq!(interprete.get_var_value("x"), Some(3));
 
-        let mut interprete = Interprete::new("var x = 1; si( x == 0 ){ x = x + 2; }").unwrap();
         interprete.step_inst().unwrap();
+        assert_eq!(interprete.get_var_value("x"), Some(7));
+
         interprete.step_inst().unwrap();
+        assert_eq!(interprete.get_var_value("y"), Some(2));
         assert_eq!(interprete.get_var_value("x"), Some(1));
+
+        interprete.step_inst().unwrap();
+        assert_eq!(interprete.get_var_value("x"), Some(10));
     }
 }

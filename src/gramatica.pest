@@ -42,11 +42,13 @@ decl = { "var" ~ nom_var ~  "=" ~ expr ~ ";" }
 
 asig = { nom_var ~ "=" ~ expr ~ ";" }
 
-inst = { decl | asig | bloque_si }
+inst = _{ decl | asig | bloque_si }
 
-bloque_si = { "si" ~ "(" ~ expr_logic ~ ")" ~ "{" ~ bloque ~ "}"}
+bloque_si = { "si" ~ "(" ~ expr_logic ~ ")" ~ "{" ~ si_inner_bloque ~ "}"}
 
 bloque = _{ (inst)* ~ inst?}
+
+si_inner_bloque = { bloque }
 
 prog = _{
     SOI ~
