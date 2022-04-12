@@ -113,7 +113,7 @@ fn test_si() {
         "var x = 1; 
         si(x == 1){ 
             x = x + 2; 
-            si( x <= 3 ){ 
+            si(x <= 3){ 
                 x = 100; 
             } 
         } 
@@ -136,4 +136,34 @@ fn test_si() {
 
     interprete.step_inst().unwrap();
     assert_eq!(interprete.get_var_value("x"), Some(10));
+}
+
+#[test]
+fn test_mientras() {
+    let mut interprete = Interpreter::new(
+        "var x = 0; 
+        mientras(x < 3){ 
+            x = x + 1; 
+        } 
+        var y = 10;",
+    )
+    .unwrap();
+    assert_eq!(interprete.get_var_value("x"), None);
+
+    interprete.step_inst().unwrap();
+    assert_eq!(interprete.get_var_value("x"), Some(0));
+
+    interprete.step_inst().unwrap();
+    assert_eq!(interprete.get_var_value("x"), Some(1));
+
+    interprete.step_inst().unwrap();
+    assert_eq!(interprete.get_var_value("x"), Some(2));
+
+    interprete.step_inst().unwrap();
+    assert_eq!(interprete.get_var_value("x"), Some(3));
+    assert_eq!(interprete.get_var_value("y"), None);
+
+    interprete.step_inst().unwrap();
+    assert_eq!(interprete.get_var_value("x"), Some(3));
+    assert_eq!(interprete.get_var_value("y"), Some(10));
 }

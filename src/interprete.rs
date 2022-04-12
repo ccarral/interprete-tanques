@@ -27,7 +27,6 @@ pub enum ExecutionContext<'a> {
 pub struct Interpreter<'a> {
     exec_stack: Vec<(Pairs<'a, Rule>, ExecutionContext<'a>)>,
     scope: Scope,
-    ctx: ExecutionContext<'a>,
 }
 
 impl<'a> Interpreter<'a> {
@@ -37,7 +36,6 @@ impl<'a> Interpreter<'a> {
         Ok(Self {
             exec_stack: vec![(pairs, ExecutionContext::Block)],
             scope,
-            ctx: ExecutionContext::Block,
         })
     }
 
@@ -73,7 +71,6 @@ impl<'a> Interpreter<'a> {
             }
             Rule::bloque_si => {
                 let mut pairs = pair.into_inner();
-                println!("Pares si:");
                 let expr_logic = pairs.next().unwrap();
                 let expr_val = eval_logic(expr_logic.into_inner(), &self.scope)?;
                 if expr_val {
@@ -82,7 +79,26 @@ impl<'a> Interpreter<'a> {
                     let instrucciones = pairs.next().unwrap().into_inner();
                     self.exec_stack
                         .push((instrucciones, ExecutionContext::IfBlock));
-                    self.ctx = ExecutionContext::IfBlock;
+                    self.step_inst()?;
+                }
+            }
+            Rule::bloque_mientras => {
+                let mut pairs = pair.into_inner();
+                let expr_logic = pairs.next().unwrap();
+                let expr_logic_clone = expr_logic.clone();
+                let expr_val = eval_logic(expr_logic.into_inner(), &self.scope)?;
+                if expr_val {
+                    self.scope.add();
+                    let instrucciones = pairs.next().unwrap().into_inner();
+                    let instrucciones_clone = instrucciones.clone();
+                    self.exec_stack.push((
+                        instrucciones,
+                        ExecutionContext::While(expr_logic_clone.clone()),
+                    ));
+                    self.exec_stack.push((
+                        instrucciones_clone,
+                        ExecutionContext::While(expr_logic_clone),
+                    ));
                     self.step_inst()?;
                 }
             }
@@ -95,16 +111,11 @@ impl<'a> Interpreter<'a> {
 
     pub fn step_inst(&mut self) -> Result<(), ErrorInterprete> {
         let (mut current_exec_block, ctx) = self.exec_stack.pop().unwrap();
-        if self.ctx == ExecutionContext::IfBlock {
-            println!("IFBLOCK");
-            dbg!(&current_exec_block);
-        }
         if let Some(pair) = dbg!(current_exec_block.next()) {
             self.exec_stack.push((current_exec_block, ctx));
             self.parse_node(pair)?;
         } else {
             // Reached the end of the iterator, check for condition
-            println!("End of iterator!");
             match ctx {
                 ExecutionContext::Block => {}
                 ExecutionContext::IfBlock => {
@@ -114,7 +125,7 @@ impl<'a> Interpreter<'a> {
                 ExecutionContext::While(p) => {
                     let pair = p.clone();
                     let pairs = pair.into_inner();
-                    let expr_val = eval_logic(pairs, &self.scope)?;
+                    let expr_val = dbg!(eval_logic(pairs, &self.scope))?;
                     if !expr_val {
                         // Loop ends, pop the cloned pairs object
                         self.exec_stack.pop();
@@ -126,6 +137,7 @@ impl<'a> Interpreter<'a> {
                         let ctx_clone = ctx.clone();
                         self.exec_stack.push((pairs, ctx));
                         self.exec_stack.push((pairs_clone, ctx_clone));
+                        self.step_inst()?;
                     }
                 }
             }
