@@ -17,6 +17,18 @@ pub struct TankStatus {
     ammo_big: usize,
 }
 
+impl Default for TankStatus {
+    fn default() -> Self {
+        Self {
+            pos: (0, 0),
+            health: 100,
+            shot: false,
+            ammo_small: 10000,
+            ammo_big: 100,
+        }
+    }
+}
+
 #[derive(Debug, Eq, PartialEq, Clone)]
 pub enum ExecutionContext<'a> {
     Block,
@@ -43,17 +55,21 @@ impl<'a> Interpreter<'a> {
         self.scope.get_var_value(&varname)
     }
 
-    fn parse_node(&mut self, pair: Pair<'a, Rule>) -> Result<(), ErrorInterprete> {
+    fn parse_node(
+        &mut self,
+        pair: Pair<'a, Rule>,
+        current_status: &TankStatus,
+    ) -> Result<(), ErrorInterprete> {
         println!("Descending");
         dbg!(&pair.as_rule());
         match pair.as_rule() {
             Rule::inst => {
                 let inst_inner = pair.into_inner().next().unwrap();
-                self.parse_node(inst_inner)?;
+                self.parse_node(inst_inner, current_status)?;
             }
             Rule::bloque => {
                 let bloque_inner = pair.into_inner().next().unwrap();
-                self.parse_node(bloque_inner)?;
+                self.parse_node(bloque_inner, current_status)?;
             }
             Rule::decl => {
                 let mut decl_pairs = pair.into_inner();
@@ -79,7 +95,7 @@ impl<'a> Interpreter<'a> {
                     let instrucciones = pairs.next().unwrap().into_inner();
                     self.exec_stack
                         .push((instrucciones, ExecutionContext::IfBlock));
-                    self.step_inst()?;
+                    self.step_inst(current_status)?;
                 }
             }
             Rule::bloque_mientras => {
@@ -99,7 +115,7 @@ impl<'a> Interpreter<'a> {
                         instrucciones_clone,
                         ExecutionContext::While(expr_logic_clone),
                     ));
-                    self.step_inst()?;
+                    self.step_inst(current_status)?;
                 }
             }
 
@@ -109,18 +125,21 @@ impl<'a> Interpreter<'a> {
         Ok(())
     }
 
-    pub fn step_inst(&mut self) -> Result<(), ErrorInterprete> {
+    pub fn step_inst(
+        &mut self,
+        current_status: &TankStatus,
+    ) -> Result<TankStatus, ErrorInterprete> {
         let (mut current_exec_block, ctx) = self.exec_stack.pop().unwrap();
         if let Some(pair) = dbg!(current_exec_block.next()) {
             self.exec_stack.push((current_exec_block, ctx));
-            self.parse_node(pair)?;
+            self.parse_node(pair, current_status)?;
         } else {
             // Reached the end of the iterator, check for condition
             match ctx {
                 ExecutionContext::Block => {}
                 ExecutionContext::IfBlock => {
                     self.scope.drop();
-                    self.step_inst()?;
+                    self.step_inst(current_status)?;
                 }
                 ExecutionContext::While(p) => {
                     let pair = p.clone();
@@ -129,7 +148,7 @@ impl<'a> Interpreter<'a> {
                     if !expr_val {
                         // Loop ends, pop the cloned pairs object
                         self.exec_stack.pop();
-                        self.step_inst()?;
+                        self.step_inst(current_status)?;
                     } else {
                         // Loop  continues, push another pairs object to the stack
                         let (pairs, ctx) = self.exec_stack.pop().unwrap();
@@ -137,12 +156,12 @@ impl<'a> Interpreter<'a> {
                         let ctx_clone = ctx.clone();
                         self.exec_stack.push((pairs, ctx));
                         self.exec_stack.push((pairs_clone, ctx_clone));
-                        self.step_inst()?;
+                        self.step_inst(current_status)?;
                     }
                 }
             }
         }
-        Ok(())
+        Ok(TankStatus::default())
     }
 }
 

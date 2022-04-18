@@ -1,4 +1,4 @@
-use crate::interprete::{eval_logic, Interpreter};
+use crate::interprete::{eval_logic, Interpreter, TankStatus};
 use crate::parser::ParserTanques;
 use crate::parser::*;
 use crate::scope::Scope;
@@ -10,17 +10,19 @@ pub fn test_expr() {
             "var x = 1 + 2;var y = 1 - 2 ;var z = 4 * 2; var w = 4/(2*2); var a = w + 10; var b = n + 1;",
         )
         .unwrap();
-    interprete.step_inst().unwrap();
+
+    let status = TankStatus::default();
+    interprete.step_inst(&status).unwrap();
     assert_eq!(interprete.get_var_value("x"), Some(3));
-    interprete.step_inst().unwrap();
+    interprete.step_inst(&status).unwrap();
     assert_eq!(interprete.get_var_value("y"), Some(-1));
-    interprete.step_inst().unwrap();
+    interprete.step_inst(&status).unwrap();
     assert_eq!(interprete.get_var_value("z"), Some(8));
-    interprete.step_inst().unwrap();
+    interprete.step_inst(&status).unwrap();
     assert_eq!(interprete.get_var_value("w"), Some(1));
-    interprete.step_inst().unwrap();
+    interprete.step_inst(&status).unwrap();
     assert_eq!(interprete.get_var_value("a"), Some(11));
-    let res = interprete.step_inst();
+    let res = interprete.step_inst(&status);
     assert!(res.is_err());
 }
 
@@ -75,9 +77,10 @@ pub fn test_expr_logic() {
 #[test]
 fn test_asig() {
     let mut interprete = Interpreter::new("var x = 1;x = x + 1;").unwrap();
-    interprete.step_inst().unwrap();
+    let status = TankStatus::default();
+    interprete.step_inst(&status).unwrap();
     assert_eq!(interprete.get_var_value("x"), Some(1));
-    interprete.step_inst().unwrap();
+    interprete.step_inst(&status).unwrap();
     assert_eq!(interprete.get_var_value("x"), Some(2));
 }
 
@@ -93,20 +96,21 @@ fn test_si() {
             x = 10;",
     )
     .unwrap();
-    interprete.step_inst().unwrap();
+    let status = TankStatus::default();
+    interprete.step_inst(&status).unwrap();
     assert_eq!(interprete.get_var_value("x"), Some(1));
 
-    interprete.step_inst().unwrap();
+    interprete.step_inst(&status).unwrap();
     assert_eq!(interprete.get_var_value("x"), Some(3));
 
-    interprete.step_inst().unwrap();
+    interprete.step_inst(&status).unwrap();
     assert_eq!(interprete.get_var_value("x"), Some(7));
 
-    interprete.step_inst().unwrap();
+    interprete.step_inst(&status).unwrap();
     assert_eq!(interprete.get_var_value("y"), Some(2));
     assert_eq!(interprete.get_var_value("x"), Some(1));
 
-    interprete.step_inst().unwrap();
+    interprete.step_inst(&status).unwrap();
     assert_eq!(interprete.get_var_value("x"), Some(10));
 
     let mut interprete = Interpreter::new(
@@ -122,19 +126,19 @@ fn test_si() {
     )
     .unwrap();
 
-    interprete.step_inst().unwrap();
+    interprete.step_inst(&status).unwrap();
     assert_eq!(interprete.get_var_value("x"), Some(1));
 
-    interprete.step_inst().unwrap();
+    interprete.step_inst(&status).unwrap();
     assert_eq!(interprete.get_var_value("x"), Some(3));
 
-    interprete.step_inst().unwrap();
+    interprete.step_inst(&status).unwrap();
     assert_eq!(interprete.get_var_value("x"), Some(100));
 
-    interprete.step_inst().unwrap();
+    interprete.step_inst(&status).unwrap();
     assert_eq!(interprete.get_var_value("x"), Some(1));
 
-    interprete.step_inst().unwrap();
+    interprete.step_inst(&status).unwrap();
     assert_eq!(interprete.get_var_value("x"), Some(10));
 }
 
@@ -148,22 +152,24 @@ fn test_mientras() {
         var y = 10;",
     )
     .unwrap();
+    let status = TankStatus::default();
+
     assert_eq!(interprete.get_var_value("x"), None);
 
-    interprete.step_inst().unwrap();
+    interprete.step_inst(&status).unwrap();
     assert_eq!(interprete.get_var_value("x"), Some(0));
 
-    interprete.step_inst().unwrap();
+    interprete.step_inst(&status).unwrap();
     assert_eq!(interprete.get_var_value("x"), Some(1));
 
-    interprete.step_inst().unwrap();
+    interprete.step_inst(&status).unwrap();
     assert_eq!(interprete.get_var_value("x"), Some(2));
 
-    interprete.step_inst().unwrap();
+    interprete.step_inst(&status).unwrap();
     assert_eq!(interprete.get_var_value("x"), Some(3));
     assert_eq!(interprete.get_var_value("y"), None);
 
-    interprete.step_inst().unwrap();
+    interprete.step_inst(&status).unwrap();
     assert_eq!(interprete.get_var_value("x"), Some(3));
     assert_eq!(interprete.get_var_value("y"), Some(10));
 }
