@@ -1,33 +1,11 @@
 use crate::error::ErrorInterprete;
 use crate::parser::*;
 use crate::scope::Scope;
+use crate::tank_status::{TankDirection, TankStatus};
 use pest::error::Error;
 use pest::iterators::{Pair, Pairs};
 use pest::prec_climber::*;
 use pest::Parser;
-
-pub struct TankStatus {
-    // (x,y)
-    pos: (usize, usize),
-    // 0 - 100
-    health: usize,
-    // if tank just shot
-    shot: bool,
-    ammo_small: usize,
-    ammo_big: usize,
-}
-
-impl Default for TankStatus {
-    fn default() -> Self {
-        Self {
-            pos: (0, 0),
-            health: 100,
-            shot: false,
-            ammo_small: 10000,
-            ammo_big: 100,
-        }
-    }
-}
 
 #[derive(Debug, Eq, PartialEq, Clone)]
 pub enum ExecutionContext<'a> {
@@ -59,17 +37,17 @@ impl<'a> Interpreter<'a> {
         &mut self,
         pair: Pair<'a, Rule>,
         current_status: &TankStatus,
-    ) -> Result<(), ErrorInterprete> {
+    ) -> Result<TankStatus, ErrorInterprete> {
         println!("Descending");
         dbg!(&pair.as_rule());
         match pair.as_rule() {
             Rule::inst => {
                 let inst_inner = pair.into_inner().next().unwrap();
-                self.parse_node(inst_inner, current_status)?;
+                self.parse_node(inst_inner, current_status)
             }
             Rule::bloque => {
                 let bloque_inner = pair.into_inner().next().unwrap();
-                self.parse_node(bloque_inner, current_status)?;
+                self.parse_node(bloque_inner, current_status)
             }
             Rule::decl => {
                 let mut decl_pairs = pair.into_inner();
@@ -77,6 +55,7 @@ impl<'a> Interpreter<'a> {
                 let expr = decl_pairs.next().unwrap();
                 let valor = eval(expr.into_inner(), &self.scope)?;
                 self.scope.set_var(var_name.into(), valor);
+                Ok(*current_status)
             }
             Rule::asig => {
                 let mut asig_pairs = pair.into_inner();
@@ -84,6 +63,7 @@ impl<'a> Interpreter<'a> {
                 let expr = asig_pairs.next().unwrap();
                 let valor = eval(expr.into_inner(), &self.scope)?;
                 self.scope.set_var(var_name.into(), valor);
+                Ok(*current_status)
             }
             Rule::bloque_si => {
                 let mut pairs = pair.into_inner();
@@ -95,7 +75,9 @@ impl<'a> Interpreter<'a> {
                     let instrucciones = pairs.next().unwrap().into_inner();
                     self.exec_stack
                         .push((instrucciones, ExecutionContext::IfBlock));
-                    self.step_inst(current_status)?;
+                    self.step_inst(current_status)
+                } else {
+                    Ok(*current_status)
                 }
             }
             Rule::bloque_mientras => {
@@ -115,14 +97,40 @@ impl<'a> Interpreter<'a> {
                         instrucciones_clone,
                         ExecutionContext::While(expr_logic_clone),
                     ));
-                    self.step_inst(current_status)?;
+                    self.step_inst(current_status)
+                } else {
+                    Ok(*current_status)
                 }
+            }
+            Rule::gira => {
+                let mut pairs = pair.into_inner();
+                // let dir = pairs.skip(1).next().unwrap();
+                let dir = pairs.next().unwrap();
+                let new_dir = match dir.as_str() {
+                    "izquierda" => match current_status.get_dir() {
+                        TankDirection::North => TankDirection::West,
+                        TankDirection::West => TankDirection::South,
+                        TankDirection::South => TankDirection::East,
+                        TankDirection::East => TankDirection::North,
+                    },
+                    "derecha" => match current_status.get_dir() {
+                        TankDirection::North => TankDirection::East,
+                        TankDirection::West => TankDirection::North,
+                        TankDirection::South => TankDirection::West,
+                        TankDirection::East => TankDirection::South,
+                    },
+                    _ => unreachable!(),
+                };
+
+                let mut new_status = *current_status;
+                new_status.set_dir(new_dir);
+                Ok(new_status)
             }
 
             _ => unreachable!(),
         }
 
-        Ok(())
+        // Ok(TankStatus::default())
     }
 
     pub fn step_inst(
@@ -132,14 +140,14 @@ impl<'a> Interpreter<'a> {
         let (mut current_exec_block, ctx) = self.exec_stack.pop().unwrap();
         if let Some(pair) = dbg!(current_exec_block.next()) {
             self.exec_stack.push((current_exec_block, ctx));
-            self.parse_node(pair, current_status)?;
+            self.parse_node(pair, current_status)
         } else {
             // Reached the end of the iterator, check for condition
             match ctx {
-                ExecutionContext::Block => {}
+                ExecutionContext::Block => Ok(TankStatus::default()),
                 ExecutionContext::IfBlock => {
                     self.scope.drop();
-                    self.step_inst(current_status)?;
+                    self.step_inst(current_status)
                 }
                 ExecutionContext::While(p) => {
                     let pair = p.clone();
@@ -148,7 +156,7 @@ impl<'a> Interpreter<'a> {
                     if !expr_val {
                         // Loop ends, pop the cloned pairs object
                         self.exec_stack.pop();
-                        self.step_inst(current_status)?;
+                        self.step_inst(current_status)
                     } else {
                         // Loop  continues, push another pairs object to the stack
                         let (pairs, ctx) = self.exec_stack.pop().unwrap();
@@ -156,12 +164,11 @@ impl<'a> Interpreter<'a> {
                         let ctx_clone = ctx.clone();
                         self.exec_stack.push((pairs, ctx));
                         self.exec_stack.push((pairs_clone, ctx_clone));
-                        self.step_inst(current_status)?;
+                        self.step_inst(current_status)
                     }
                 }
             }
         }
-        Ok(TankStatus::default())
     }
 }
 

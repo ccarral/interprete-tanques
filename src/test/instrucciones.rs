@@ -1,7 +1,8 @@
-use crate::interprete::{eval_logic, Interpreter, TankStatus};
+use crate::interprete::{eval_logic, Interpreter};
 use crate::parser::ParserTanques;
 use crate::parser::*;
 use crate::scope::Scope;
+use crate::tank_status::{TankDirection, TankStatus};
 use pest::Parser;
 
 #[test]
@@ -172,4 +173,47 @@ fn test_mientras() {
     interprete.step_inst(&status).unwrap();
     assert_eq!(interprete.get_var_value("x"), Some(3));
     assert_eq!(interprete.get_var_value("y"), Some(10));
+}
+
+#[test]
+fn test_gira() {
+    let mut interprete = Interpreter::new(
+        "gira derecha;
+         gira derecha;
+         gira derecha;
+         gira derecha;
+
+         gira izquierda;
+         gira izquierda;
+         gira izquierda;
+         gira izquierda;",
+    )
+    .unwrap();
+
+    let mut status = TankStatus::default();
+    status.set_dir(TankDirection::North);
+
+    let new_status = interprete.step_inst(&status).unwrap();
+    assert_eq!(new_status.get_dir(), TankDirection::East);
+
+    let new_status = interprete.step_inst(&new_status).unwrap();
+    assert_eq!(new_status.get_dir(), TankDirection::South);
+
+    let new_status = interprete.step_inst(&new_status).unwrap();
+    assert_eq!(new_status.get_dir(), TankDirection::West);
+
+    let new_status = interprete.step_inst(&new_status).unwrap();
+    assert_eq!(new_status.get_dir(), TankDirection::North);
+
+    let new_status = interprete.step_inst(&new_status).unwrap();
+    assert_eq!(new_status.get_dir(), TankDirection::West);
+
+    let new_status = interprete.step_inst(&new_status).unwrap();
+    assert_eq!(new_status.get_dir(), TankDirection::South);
+
+    let new_status = interprete.step_inst(&new_status).unwrap();
+    assert_eq!(new_status.get_dir(), TankDirection::East);
+
+    let new_status = interprete.step_inst(&new_status).unwrap();
+    assert_eq!(new_status.get_dir(), TankDirection::North);
 }

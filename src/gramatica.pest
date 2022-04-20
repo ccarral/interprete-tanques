@@ -40,15 +40,18 @@ nom_var = @{ ASCII_ALPHA_LOWER+ }
 
 decl = { "var" ~ nom_var ~  "=" ~ expr ~ ";" }
 
+gira = { "gira" ~ dir_giro ~ ";"}
+dir_giro = { "izquierda" | "derecha" }
+
 asig = { nom_var ~ "=" ~ expr ~ ";" }
 
-inst = _{ decl | asig | bloque_si | bloque_mientras }
+inst = _{ decl | asig | bloque_si | bloque_mientras | gira }
 
 bloque_si = { "si" ~ "(" ~ expr_logic ~ ")" ~ "{" ~ si_inner_bloque ~ "}"}
 
 bloque_mientras= { "mientras" ~ "(" ~ expr_logic ~ ")" ~ "{" ~ si_inner_bloque ~ "}"}
 
-bloque = _{ (inst)* ~ inst?}
+bloque = _{ (inst)* ~ inst? }
 
 si_inner_bloque = { bloque }
 
