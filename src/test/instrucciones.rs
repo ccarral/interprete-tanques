@@ -232,6 +232,12 @@ fn test_avanza() {
          gira derecha;
          avanza;
          avanza;
+         avanza;
+         avanza;
+
+         avanza;
+         gira izquierda;
+         avanza;
          ",
     )
     .unwrap();
@@ -251,6 +257,32 @@ fn test_avanza() {
     assert_eq!(status.get_pos(), (0, 2));
     let mut status = interprete.step_inst(&mut status).unwrap();
     let mut status = interprete.step_inst(&mut status).unwrap();
-    let status = interprete.step_inst(&mut status).unwrap();
+    let mut status = interprete.step_inst(&mut status).unwrap();
     assert_eq!(status.get_pos(), (0, 0));
+    let mut status = interprete.step_inst(&mut status).unwrap();
+    let mut status = interprete.step_inst(&mut status).unwrap();
+    assert_eq!(status.get_pos(), (0, 0));
+
+    status.set_dir(TankDirection::South);
+    status.set_pos(
+        TankStatus::GRID_DIMMENSIONS - 1,
+        TankStatus::GRID_DIMMENSIONS - 1,
+    );
+    let mut status = interprete.step_inst(&mut status).unwrap();
+    assert_eq!(
+        status.get_pos(),
+        (
+            TankStatus::GRID_DIMMENSIONS - 1,
+            TankStatus::GRID_DIMMENSIONS - 1
+        )
+    );
+    let mut status = interprete.step_inst(&mut status).unwrap();
+    let mut status = interprete.step_inst(&mut status).unwrap();
+    assert_eq!(
+        status.get_pos(),
+        (
+            TankStatus::GRID_DIMMENSIONS - 1,
+            TankStatus::GRID_DIMMENSIONS - 1
+        )
+    );
 }
