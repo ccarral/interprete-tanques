@@ -2,7 +2,7 @@ use crate::error::ErrorInterprete;
 use crate::parser::*;
 use crate::scope::Scope;
 use crate::tank_status::{TankDirection, TankStatus};
-use pest::error::Error;
+use pest::error::{Error, LineColLocation};
 use pest::iterators::{Pair, Pairs};
 use pest::prec_climber::*;
 use pest::Parser;
@@ -20,8 +20,8 @@ pub struct Interpreter<'a> {
 }
 
 impl<'a> Interpreter<'a> {
-    pub fn new(prog: &'a str) -> Result<Self, Error<Rule>> {
-        let pairs = ParserTanques::parse(Rule::prog, prog)?;
+    pub fn new(prog: &'a str) -> Result<Self, LineColLocation> {
+        let pairs = ParserTanques::parse(Rule::prog, prog).map_err(|e| e.line_col)?;
         let scope = Scope::new();
         Ok(Self {
             exec_stack: vec![(pairs, ExecutionContext::Block)],
@@ -126,7 +126,32 @@ impl<'a> Interpreter<'a> {
                 new_status.set_dir(new_dir);
                 Ok(new_status)
             }
-
+            Rule::avanza => {
+                let (old_x, old_y) = current_status.get_pos();
+                let (new_x, new_y) = match current_status.get_dir() {
+                    TankDirection::North => (old_x, old_y.saturating_sub(1)),
+                    TankDirection::West => (old_x.saturating_sub(1), old_y),
+                    TankDirection::South => (
+                        old_x,
+                        if old_y + 1 == TankStatus::GRID_DIMMENSIONS {
+                            old_y
+                        } else {
+                            old_y + 1
+                        },
+                    ),
+                    TankDirection::East => (
+                        if old_x + 1 == TankStatus::GRID_DIMMENSIONS {
+                            old_x
+                        } else {
+                            old_x + 1
+                        },
+                        old_y,
+                    ),
+                };
+                let mut new_status = *current_status;
+                new_status.set_pos(new_x, new_y);
+                Ok(new_status)
+            }
             _ => unreachable!(),
         }
 

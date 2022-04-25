@@ -43,9 +43,11 @@ decl = { "var" ~ nom_var ~  "=" ~ expr ~ ";" }
 gira = { "gira" ~ dir_giro ~ ";"}
 dir_giro = { "izquierda" | "derecha" }
 
+avanza =  { "avanza" ~ ";" }
+
 asig = { nom_var ~ "=" ~ expr ~ ";" }
 
-inst = _{ decl | asig | bloque_si | bloque_mientras | gira }
+inst = _{ decl | asig | bloque_si | bloque_mientras | gira | avanza }
 
 bloque_si = { "si" ~ "(" ~ expr_logic ~ ")" ~ "{" ~ si_inner_bloque ~ "}"}
 

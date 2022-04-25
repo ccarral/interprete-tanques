@@ -33,10 +33,17 @@ impl Default for TankStatus {
 }
 
 impl TankStatus {
+    pub const GRID_DIMMENSIONS: usize = 12;
     pub fn set_dir(&mut self, dir: TankDirection) {
         self.direction = dir;
     }
     pub fn get_dir(&self) -> TankDirection {
         self.direction
+    }
+    pub fn get_pos(&self) -> (usize, usize) {
+        self.pos
+    }
+    pub fn set_pos(&mut self, x: usize, y: usize) {
+        self.pos = (x, y);
     }
 }

@@ -217,3 +217,40 @@ fn test_gira() {
     let new_status = interprete.step_inst(&new_status).unwrap();
     assert_eq!(new_status.get_dir(), TankDirection::North);
 }
+
+#[test]
+fn test_avanza() {
+    let mut interprete = Interpreter::new(
+        "avanza;
+         avanza;
+         gira derecha;
+         avanza;
+         avanza;
+         gira derecha;
+         avanza;
+         avanza;
+         gira derecha;
+         avanza;
+         avanza;
+         ",
+    )
+    .unwrap();
+
+    let mut status = TankStatus::default();
+    status.set_dir(TankDirection::East);
+    let mut status = interprete.step_inst(&mut status).unwrap();
+    let mut status = interprete.step_inst(&mut status).unwrap();
+    assert_eq!(status.get_pos(), (2, 0));
+    let mut status = interprete.step_inst(&mut status).unwrap();
+    let mut status = interprete.step_inst(&mut status).unwrap();
+    let mut status = interprete.step_inst(&mut status).unwrap();
+    assert_eq!(status.get_pos(), (2, 2));
+    let mut status = interprete.step_inst(&mut status).unwrap();
+    let mut status = interprete.step_inst(&mut status).unwrap();
+    let mut status = interprete.step_inst(&mut status).unwrap();
+    assert_eq!(status.get_pos(), (0, 2));
+    let mut status = interprete.step_inst(&mut status).unwrap();
+    let mut status = interprete.step_inst(&mut status).unwrap();
+    let status = interprete.step_inst(&mut status).unwrap();
+    assert_eq!(status.get_pos(), (0, 0));
+}
