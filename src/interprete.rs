@@ -152,10 +152,9 @@ impl<'a> Interpreter<'a> {
                 new_status.set_pos(new_x, new_y);
                 Ok(new_status)
             }
+            Rule::EOI => Ok(*current_status),
             _ => unreachable!(),
         }
-
-        // Ok(TankStatus::default())
     }
 
     pub fn step_inst(

@@ -57,6 +57,8 @@ bloque = _{ (inst)* ~ inst? }
 
 si_inner_bloque = { bloque }
 
+COMMENT = _{"//" ~ (!"\n" ~ ANY)* }
+
 prog = _{
     SOI ~
     bloque ~

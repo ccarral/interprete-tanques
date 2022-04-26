@@ -277,7 +277,7 @@ fn test_avanza() {
         )
     );
     let mut status = interprete.step_inst(&mut status).unwrap();
-    let mut status = interprete.step_inst(&mut status).unwrap();
+    let status = interprete.step_inst(&mut status).unwrap();
     assert_eq!(
         status.get_pos(),
         (
@@ -285,4 +285,25 @@ fn test_avanza() {
             TankStatus::GRID_DIMMENSIONS - 1
         )
     );
+}
+
+#[test]
+fn test_comment() {
+    let mut interprete = Interpreter::new(
+        "
+                avanza; // Esto es un comentario
+                // Esto también
+                gira derecha;
+                // Comentario al final",
+    )
+    .unwrap();
+
+    let mut tank_status = TankStatus::default();
+    tank_status.set_dir(TankDirection::East);
+    let tank_status = interprete.step_inst(&tank_status).unwrap();
+    assert_eq!(tank_status.get_pos(), (1, 0));
+    let tank_status = interprete.step_inst(&tank_status).unwrap();
+    assert_eq!(tank_status.get_dir(), TankDirection::South);
+    interprete.step_inst(&tank_status).unwrap();
+    interprete.step_inst(&tank_status).unwrap();
 }
