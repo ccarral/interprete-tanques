@@ -7,6 +7,8 @@ use pest::iterators::{Pair, Pairs};
 use pest::prec_climber::*;
 use pest::Parser;
 
+const RADAR: &'static str = "radar";
+
 #[derive(Debug, Eq, PartialEq, Clone)]
 pub enum ExecutionContext<'a> {
     Block,
@@ -124,6 +126,7 @@ impl<'a> Interpreter<'a> {
 
                 let mut new_status = *current_status;
                 new_status.set_dir(new_dir);
+                self.scope.set_var(RADAR, new_status.calc_radar());
                 Ok(new_status)
             }
             Rule::avanza => {
@@ -148,8 +151,10 @@ impl<'a> Interpreter<'a> {
                         old_y,
                     ),
                 };
+
                 let mut new_status = *current_status;
                 new_status.set_pos(new_x, new_y);
+                self.scope.set_var(RADAR, new_status.calc_radar());
                 Ok(new_status)
             }
             Rule::EOI => Ok(*current_status),

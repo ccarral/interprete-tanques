@@ -307,3 +307,49 @@ fn test_comment() {
     interprete.step_inst(&tank_status).unwrap();
     interprete.step_inst(&tank_status).unwrap();
 }
+
+#[test]
+fn test_radar() {
+    // (0,0)
+    let mut status = TankStatus::default();
+    assert_eq!(status.calc_radar(), 0);
+    status.set_pos(3, 5);
+    status.set_dir(TankDirection::West);
+    assert_eq!(status.calc_radar(), 3);
+    status.set_dir(TankDirection::North);
+    assert_eq!(status.calc_radar(), 5);
+
+    let mut interprete = Interpreter::new(
+        "
+                                          avanza;
+                                          avanza;
+                                          var x = radar;
+                                          gira derecha;
+                                          x = radar;
+                                          gira derecha;
+                                          x = radar;
+                                          avanza;
+                                          avanza;
+                                          x = radar;
+                                          ",
+    )
+    .unwrap();
+
+    let status = interprete.step_inst(&status).unwrap();
+    let status = interprete.step_inst(&status).unwrap();
+    let status = interprete.step_inst(&status).unwrap();
+    assert_eq!(interprete.get_var_value("x").unwrap(), 3);
+
+    let status = interprete.step_inst(&status).unwrap();
+    let status = interprete.step_inst(&status).unwrap();
+    assert_eq!(interprete.get_var_value("x").unwrap(), 8);
+
+    let status = interprete.step_inst(&status).unwrap();
+    let status = interprete.step_inst(&status).unwrap();
+    assert_eq!(interprete.get_var_value("x").unwrap(), 8);
+
+    let status = interprete.step_inst(&status).unwrap();
+    let status = interprete.step_inst(&status).unwrap();
+    let status = interprete.step_inst(&status).unwrap();
+    assert_eq!(interprete.get_var_value("x").unwrap(), 6);
+}

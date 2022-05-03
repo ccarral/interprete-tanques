@@ -46,4 +46,15 @@ impl TankStatus {
     pub fn set_pos(&mut self, x: usize, y: usize) {
         self.pos = (x, y);
     }
+    pub fn calc_radar(&self) -> isize {
+        let (new_x, new_y) = self.get_pos();
+        match self.get_dir() {
+            TankDirection::North => new_y,
+            TankDirection::West => new_x,
+            TankDirection::South => TankStatus::GRID_DIMMENSIONS - new_y - 1,
+            TankDirection::East => TankStatus::GRID_DIMMENSIONS - new_x - 1,
+        }
+        .try_into()
+        .unwrap()
+    }
 }
