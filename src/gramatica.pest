@@ -49,7 +49,8 @@ asig = { nom_var ~ "=" ~ expr ~ ";" }
 
 inst = _{ decl | asig | bloque_si | bloque_mientras | gira | avanza }
 
-bloque_si = { "si" ~ "(" ~ expr_logic ~ ")" ~ "{" ~ si_inner_bloque ~ "}"}
+bloque_si = { "si" ~ "(" ~ expr_logic ~ ")" ~ "{" ~ si_inner_bloque ~ "}"
+~ ("otro" ~ "{" ~ si_inner_bloque ~  "}")*}
 
 bloque_mientras= { "mientras" ~ "(" ~ expr_logic ~ ")" ~ "{" ~ si_inner_bloque ~ "}"}
 

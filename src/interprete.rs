@@ -71,15 +71,24 @@ impl<'a> Interpreter<'a> {
                 let mut pairs = pair.into_inner();
                 let expr_logic = pairs.next().unwrap();
                 let expr_val = eval_logic(expr_logic.into_inner(), &self.scope)?;
+                let bloque_principal = pairs.next();
+                let bloque_else = pairs.next();
                 if expr_val {
                     self.scope.add();
-                    // Debería de tener el bloque
-                    let instrucciones = pairs.next().unwrap().into_inner();
+                    let instrucciones = bloque_principal.unwrap().into_inner();
                     self.exec_stack
                         .push((instrucciones, ExecutionContext::IfBlock));
                     self.step_inst(current_status)
                 } else {
-                    Ok(*current_status)
+                    if let Some(bloque) = bloque_else {
+                        self.scope.add();
+                        let instrucciones = bloque.into_inner();
+                        self.exec_stack
+                            .push((instrucciones, ExecutionContext::IfBlock));
+                        self.step_inst(current_status)
+                    } else {
+                        Ok(*current_status)
+                    }
                 }
             }
             Rule::bloque_mientras => {

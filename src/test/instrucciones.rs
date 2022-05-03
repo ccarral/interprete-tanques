@@ -141,6 +141,34 @@ fn test_si() {
 
     interprete.step_inst(&status).unwrap();
     assert_eq!(interprete.get_var_value("x"), Some(10));
+
+    let mut interprete = Interpreter::new(
+        "var x = 2; 
+        si(x == 1){ 
+            x = x + 2; 
+        }otro{
+            x = x + 10;
+        } 
+        var y = 2;",
+    )
+    .unwrap();
+    interprete.step_inst(&status).unwrap();
+    interprete.step_inst(&status).unwrap();
+    assert_eq!(interprete.get_var_value("x"), Some(12));
+
+    let mut interprete = Interpreter::new(
+        "var x = 1; 
+        si(x == 1){ 
+            x = x + 2; 
+        }otro{
+            x = x + 10;
+        } 
+        var y = 2;",
+    )
+    .unwrap();
+    interprete.step_inst(&status).unwrap();
+    interprete.step_inst(&status).unwrap();
+    assert_eq!(interprete.get_var_value("x"), Some(3));
 }
 
 #[test]
