@@ -11,10 +11,27 @@ impl Scope {
         Scope { map_stack }
     }
 
-    pub fn set_var(&mut self, var_name: &str, value: isize) {
+    /// Define un nuevo valor en el scope, independientemente de
+    /// si estába definido previamente.
+    pub fn define_new_scope_var(&mut self, var_name: &str, value: isize) {
         let mut current_map = self.map_stack.pop().unwrap();
         current_map.insert(var_name.into(), value);
         self.map_stack.push(current_map);
+    }
+
+    /// Busca un valor en scopes previos con el mismo nombre para asignarle el valor.
+    /// Si no lo encuentra, lo crea en el scope actual
+    pub fn set_or_define(&mut self, var_name: &str, value: isize) {
+        let mut found = false;
+        for map in self.map_stack.iter_mut().rev() {
+            if let Some(_) = map.get(var_name.into()) {
+                map.insert(var_name.into(), value);
+                found = true;
+            }
+        }
+        if !found {
+            self.define_new_scope_var(var_name, value);
+        }
     }
 
     /// Get `var_name`'s last defined value.
@@ -48,12 +65,12 @@ mod test {
         //   var pepe = 23;
         //   pepe = 49;
         // }
-        scope.set_var("pepe", 12);
+        scope.define_new_scope_var("pepe", 12);
         scope.add();
-        scope.set_var("pepe", 23);
+        scope.define_new_scope_var("pepe", 23);
         let value = scope.get_var_value("pepe");
         assert_eq!(value, Some(23));
-        scope.set_var("pepe", 49);
+        scope.define_new_scope_var("pepe", 49);
         let value = scope.get_var_value("pepe");
         assert_eq!(value, Some(49));
         scope.drop();

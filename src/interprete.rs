@@ -56,7 +56,7 @@ impl<'a> Interpreter<'a> {
                 let var_name = decl_pairs.next().unwrap().as_str();
                 let expr = decl_pairs.next().unwrap();
                 let valor = eval(expr.into_inner(), &self.scope)?;
-                self.scope.set_var(var_name.into(), valor);
+                self.scope.define_new_scope_var(var_name.into(), valor);
                 Ok(*current_status)
             }
             Rule::asig => {
@@ -64,7 +64,7 @@ impl<'a> Interpreter<'a> {
                 let var_name = asig_pairs.next().unwrap().as_str();
                 let expr = asig_pairs.next().unwrap();
                 let valor = eval(expr.into_inner(), &self.scope)?;
-                self.scope.set_var(var_name.into(), valor);
+                self.scope.set_or_define(var_name.into(), valor);
                 Ok(*current_status)
             }
             Rule::bloque_si => {
@@ -135,7 +135,8 @@ impl<'a> Interpreter<'a> {
 
                 let mut new_status = *current_status;
                 new_status.set_dir(new_dir);
-                self.scope.set_var(RADAR, new_status.calc_radar());
+                self.scope
+                    .define_new_scope_var(RADAR, new_status.calc_radar());
                 Ok(new_status)
             }
             Rule::avanza => {
@@ -163,7 +164,8 @@ impl<'a> Interpreter<'a> {
 
                 let mut new_status = *current_status;
                 new_status.set_pos(new_x, new_y);
-                self.scope.set_var(RADAR, new_status.calc_radar());
+                self.scope
+                    .define_new_scope_var(RADAR, new_status.calc_radar());
                 Ok(new_status)
             }
             Rule::EOI => Ok(*current_status),

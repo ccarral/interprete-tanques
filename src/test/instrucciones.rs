@@ -60,14 +60,14 @@ pub fn test_expr_logic() {
     let val = eval_expr("1 <= 2", &scope);
     assert!(val);
 
-    scope.set_var("x", 8);
+    scope.define_new_scope_var("x", 8);
     let val = eval_expr("x == 8", &scope);
     assert!(val);
 
     let val = eval_expr("x != 8", &scope);
     assert!(!val);
 
-    scope.set_var("y", 9);
+    scope.define_new_scope_var("y", 9);
     let val = eval_expr("x < y", &scope);
     assert!(val);
 
@@ -109,7 +109,7 @@ fn test_si() {
 
     interprete.step_inst(&status).unwrap();
     assert_eq!(interprete.get_var_value("y"), Some(2));
-    assert_eq!(interprete.get_var_value("x"), Some(1));
+    assert_eq!(interprete.get_var_value("x"), Some(7));
 
     interprete.step_inst(&status).unwrap();
     assert_eq!(interprete.get_var_value("x"), Some(10));
@@ -137,7 +137,7 @@ fn test_si() {
     assert_eq!(interprete.get_var_value("x"), Some(100));
 
     interprete.step_inst(&status).unwrap();
-    assert_eq!(interprete.get_var_value("x"), Some(1));
+    assert_eq!(interprete.get_var_value("x"), Some(100));
 
     interprete.step_inst(&status).unwrap();
     assert_eq!(interprete.get_var_value("x"), Some(10));
@@ -166,6 +166,7 @@ fn test_si() {
         var y = 2;",
     )
     .unwrap();
+    interprete.step_inst(&status).unwrap();
     interprete.step_inst(&status).unwrap();
     interprete.step_inst(&status).unwrap();
     assert_eq!(interprete.get_var_value("x"), Some(3));
