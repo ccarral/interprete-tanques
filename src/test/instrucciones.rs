@@ -250,6 +250,15 @@ fn test_gira() {
 }
 
 #[test]
+fn test_dispara() {
+    let mut interprete = Interpreter::new("dispara;").unwrap();
+    let status = TankStatus::default();
+    assert!(!status.shot());
+    let new_status = interprete.step_inst(&status).unwrap();
+    assert!(new_status.shot())
+}
+
+#[test]
 fn test_avanza() {
     let mut interprete = Interpreter::new(
         "avanza;

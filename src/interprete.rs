@@ -173,6 +173,11 @@ impl<'a> Interpreter<'a> {
                     .define_new_scope_var(RADAR, new_status.calc_radar());
                 Ok(new_status)
             }
+            Rule::dispara => {
+                let mut new_status = *current_status;
+                new_status.set_shot(true);
+                Ok(new_status)
+            }
             Rule::EOI => Ok(*current_status),
             _ => unreachable!(),
         }

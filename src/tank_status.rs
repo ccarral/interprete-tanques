@@ -60,4 +60,12 @@ impl TankStatus {
         .try_into()
         .unwrap()
     }
+
+    pub fn set_shot(&mut self, shot: bool) {
+        self.shot = shot;
+    }
+
+    pub fn shot(&self) -> bool {
+        self.shot
+    }
 }

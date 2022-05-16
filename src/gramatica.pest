@@ -45,9 +45,12 @@ dir_giro = { "izquierda" | "derecha" }
 
 avanza =  { "avanza" ~ ";" }
 
+dispara =  { "dispara" ~ ";" }
+
 asig = { nom_var ~ "=" ~ expr ~ ";" }
 
-inst = _{ decl | asig | bloque_si | bloque_mientras | gira | avanza }
+inst = _{ decl | asig | bloque_si | bloque_mientras | gira | avanza |
+dispara }
 
 bloque_si = { "si" ~ "(" ~ expr_logic ~ ")" ~ "{" ~ si_inner_bloque ~ "}"
 ~ ("otro" ~ "{" ~ si_inner_bloque ~  "}")*}
