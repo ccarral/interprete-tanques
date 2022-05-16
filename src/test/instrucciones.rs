@@ -77,12 +77,14 @@ pub fn test_expr_logic() {
 
 #[test]
 fn test_asig() {
-    let mut interprete = Interpreter::new("var x = 1;x = x + 1;").unwrap();
+    let mut interprete = Interpreter::new("var x = 1;x = x + 1; y = 2;").unwrap();
     let status = TankStatus::default();
     interprete.step_inst(&status).unwrap();
     assert_eq!(interprete.get_var_value("x"), Some(1));
     interprete.step_inst(&status).unwrap();
     assert_eq!(interprete.get_var_value("x"), Some(2));
+    let res = interprete.step_inst(&status);
+    assert!(res.is_err());
 }
 
 #[test]

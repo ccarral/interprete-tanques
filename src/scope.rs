@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 
+#[derive(Debug)]
 pub struct Scope {
     map_stack: Vec<HashMap<String, isize>>,
 }
@@ -20,18 +21,17 @@ impl Scope {
     }
 
     /// Busca un valor en scopes previos con el mismo nombre para asignarle el valor.
-    /// Si no lo encuentra, lo crea en el scope actual
-    pub fn set_or_define(&mut self, var_name: &str, value: isize) {
+    /// Si no lo encuentra,regresa falso
+    pub fn set_scope_var(&mut self, var_name: &str, value: isize) -> bool {
         let mut found = false;
-        for map in self.map_stack.iter_mut().rev() {
+        'outer: for map in self.map_stack.iter_mut().rev() {
             if let Some(_) = map.get(var_name.into()) {
                 map.insert(var_name.into(), value);
                 found = true;
+                break 'outer;
             }
         }
-        if !found {
-            self.define_new_scope_var(var_name, value);
-        }
+        found
     }
 
     /// Get `var_name`'s last defined value.

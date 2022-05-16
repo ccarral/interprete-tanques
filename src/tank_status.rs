@@ -1,3 +1,5 @@
+use wasm_bindgen::prelude::*;
+
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub enum TankDirection {
     North,
@@ -6,7 +8,8 @@ pub enum TankDirection {
     East,
 }
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Debug)]
+#[wasm_bindgen]
 pub struct TankStatus {
     // (x,y)
     pos: (usize, usize),

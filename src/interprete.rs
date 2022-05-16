@@ -7,7 +7,7 @@ use pest::iterators::{Pair, Pairs};
 use pest::prec_climber::*;
 use pest::Parser;
 
-const RADAR: &'static str = "radar";
+const RADAR: &str = "radar";
 
 #[derive(Debug, Eq, PartialEq, Clone)]
 pub enum ExecutionContext<'a> {
@@ -16,6 +16,7 @@ pub enum ExecutionContext<'a> {
     While(Pair<'a, Rule>),
 }
 
+#[derive(Debug)]
 pub struct Interpreter<'a> {
     exec_stack: Vec<(Pairs<'a, Rule>, ExecutionContext<'a>)>,
     scope: Scope,
@@ -32,7 +33,7 @@ impl<'a> Interpreter<'a> {
     }
 
     pub fn get_var_value(&self, varname: &str) -> Option<isize> {
-        self.scope.get_var_value(&varname)
+        self.scope.get_var_value(varname)
     }
 
     fn parse_node(
@@ -64,8 +65,12 @@ impl<'a> Interpreter<'a> {
                 let var_name = asig_pairs.next().unwrap().as_str();
                 let expr = asig_pairs.next().unwrap();
                 let valor = eval(expr.into_inner(), &self.scope)?;
-                self.scope.set_or_define(var_name.into(), valor);
-                Ok(*current_status)
+                let found = self.scope.set_scope_var(var_name.into(), valor);
+                if !found {
+                    Err(ErrorInterprete::VarNoDecl(var_name.into()))
+                } else {
+                    Ok(*current_status)
+                }
             }
             Rule::bloque_si => {
                 let mut pairs = pair.into_inner();
