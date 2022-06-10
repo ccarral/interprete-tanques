@@ -2,7 +2,7 @@ use crate::interprete::{eval_logic, Interpreter};
 use crate::parser::ParserTanques;
 use crate::parser::*;
 use crate::scope::Scope;
-use crate::tank_status::{TankDirection, TankStatus};
+use crate::tank_status::{Position, TankDirection, TankStatus, GRID_DIMMENSIONS};
 use pest::Parser;
 
 #[test]
@@ -304,26 +304,17 @@ fn test_avanza() {
     assert_eq!(status.get_pos(), (0, 0));
 
     status.set_dir(TankDirection::South);
-    status.set_pos(
-        TankStatus::GRID_DIMMENSIONS - 1,
-        TankStatus::GRID_DIMMENSIONS - 1,
-    );
+    status.set_pos(GRID_DIMMENSIONS - 1, GRID_DIMMENSIONS - 1);
     let mut status = interprete.step_inst(&mut status).unwrap();
     assert_eq!(
         status.get_pos(),
-        (
-            TankStatus::GRID_DIMMENSIONS - 1,
-            TankStatus::GRID_DIMMENSIONS - 1
-        )
+        (GRID_DIMMENSIONS - 1, GRID_DIMMENSIONS - 1)
     );
     let mut status = interprete.step_inst(&mut status).unwrap();
     let status = interprete.step_inst(&mut status).unwrap();
     assert_eq!(
         status.get_pos(),
-        (
-            TankStatus::GRID_DIMMENSIONS - 1,
-            TankStatus::GRID_DIMMENSIONS - 1
-        )
+        (GRID_DIMMENSIONS - 1, GRID_DIMMENSIONS - 1)
     );
 }
 

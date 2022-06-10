@@ -1,7 +1,7 @@
 use crate::error::ErrorInterprete;
 use crate::parser::*;
 use crate::scope::Scope;
-use crate::tank_status::{TankDirection, TankStatus};
+use crate::tank_status::{Position, TankDirection, TankStatus, GRID_DIMMENSIONS};
 use pest::error::{Error, LineColLocation};
 use pest::iterators::{Pair, Pairs};
 use pest::prec_climber::*;
@@ -151,14 +151,14 @@ impl<'a> Interpreter<'a> {
                     TankDirection::West => (old_x.saturating_sub(1), old_y),
                     TankDirection::South => (
                         old_x,
-                        if old_y + 1 == TankStatus::GRID_DIMMENSIONS {
+                        if old_y + 1 == GRID_DIMMENSIONS {
                             old_y
                         } else {
                             old_y + 1
                         },
                     ),
                     TankDirection::East => (
-                        if old_x + 1 == TankStatus::GRID_DIMMENSIONS {
+                        if old_x + 1 == GRID_DIMMENSIONS {
                             old_x
                         } else {
                             old_x + 1
