@@ -25,7 +25,8 @@ pub struct Interpreter<'a> {
 impl<'a> Interpreter<'a> {
     pub fn new(prog: &'a str) -> Result<Self, LineColLocation> {
         let pairs = ParserTanques::parse(Rule::prog, prog).map_err(|e| e.line_col)?;
-        let scope = Scope::new();
+        let mut scope = Scope::new();
+        scope.define_new_scope_var(RADAR, 0);
         Ok(Self {
             exec_stack: vec![(pairs, ExecutionContext::Block)],
             scope,
@@ -140,8 +141,7 @@ impl<'a> Interpreter<'a> {
 
                 let mut new_status = *current_status;
                 new_status.set_dir(new_dir);
-                self.scope
-                    .define_new_scope_var(RADAR, new_status.calc_radar());
+                self.scope.set_scope_var(RADAR, new_status.calc_radar());
                 Ok(new_status)
             }
             Rule::avanza => {
@@ -169,8 +169,7 @@ impl<'a> Interpreter<'a> {
 
                 let mut new_status = *current_status;
                 new_status.set_pos(new_x, new_y);
-                self.scope
-                    .define_new_scope_var(RADAR, new_status.calc_radar());
+                self.scope.set_scope_var(RADAR, new_status.calc_radar());
                 Ok(new_status)
             }
             Rule::dispara => {
@@ -194,7 +193,10 @@ impl<'a> Interpreter<'a> {
         } else {
             // Reached the end of the iterator, check for condition
             match ctx {
-                ExecutionContext::Block => Ok(TankStatus::default()),
+                ExecutionContext::Block => {
+                    self.exec_stack.push((current_exec_block, ctx));
+                    Ok(TankStatus::default())
+                }
                 ExecutionContext::IfBlock => {
                     self.scope.drop();
                     self.step_inst(current_status)

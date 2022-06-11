@@ -71,6 +71,16 @@ impl TankStatus {
             ammo_big: 100,
         }
     }
+
+    #[wasm_bindgen(getter)]
+    pub fn pos_x(&self) -> usize {
+        self.pos.0
+    }
+
+    #[wasm_bindgen(getter)]
+    pub fn pos_y(&self) -> usize {
+        self.pos.1
+    }
 }
 
 pub trait Position {
