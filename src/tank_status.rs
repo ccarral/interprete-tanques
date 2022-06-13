@@ -1,5 +1,5 @@
 use wasm_bindgen::prelude::*;
-pub const GRID_DIMMENSIONS: usize = 12;
+pub const GRID_DIMMENSIONS: usize = 11;
 
 #[derive(Clone, Copy, Debug, PartialEq)]
 #[wasm_bindgen]
@@ -62,6 +62,11 @@ impl TankStatus {
     #[wasm_bindgen(getter)]
     pub fn got_shot(&self) -> bool {
         self.got_shot
+    }
+
+    #[wasm_bindgen(getter)]
+    pub fn health(&self) -> usize {
+        self.health
     }
 
     pub fn set_got_shot(&mut self, got_shot: bool) {

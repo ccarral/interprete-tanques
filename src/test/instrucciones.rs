@@ -373,14 +373,14 @@ fn test_radar() {
 
     let status = interprete.step_inst(&status).unwrap();
     let status = interprete.step_inst(&status).unwrap();
-    assert_eq!(interprete.get_var_value("x").unwrap(), 6);
+    assert_eq!(interprete.get_var_value("x").unwrap(), 5);
 
     let status = interprete.step_inst(&status).unwrap();
     let status = interprete.step_inst(&status).unwrap();
-    assert_eq!(interprete.get_var_value("x").unwrap(), 10);
+    assert_eq!(interprete.get_var_value("x").unwrap(), 9);
 
     let status = interprete.step_inst(&status).unwrap();
     let status = interprete.step_inst(&status).unwrap();
     let status = interprete.step_inst(&status).unwrap();
-    assert_eq!(interprete.get_var_value("x").unwrap(), 8);
+    assert_eq!(interprete.get_var_value("x").unwrap(), 7);
 }

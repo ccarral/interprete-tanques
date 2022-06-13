@@ -42,7 +42,7 @@ impl<'a> Interpreter<'a> {
         pair: Pair<'a, Rule>,
         current_status: &TankStatus,
     ) -> Result<TankStatus, ErrorInterprete> {
-        let (current_line, _current_col) = pair.as_span().start_pos().line_col();
+        let (current_line, _current_col) = pair.as_span().end_pos().line_col();
         println!("Descending");
         dbg!(&pair.as_rule());
         match pair.as_rule() {
