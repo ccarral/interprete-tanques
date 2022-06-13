@@ -286,7 +286,7 @@ fn test_avanza() {
     status.set_dir(TankDirection::East);
     let mut status = interprete.step_inst(&mut status).unwrap();
     let mut status = interprete.step_inst(&mut status).unwrap();
-    assert_eq!(status.get_pos(), (2, 0));
+    assert_eq!(status.get_pos(), (0, 2));
     let mut status = interprete.step_inst(&mut status).unwrap();
     let mut status = interprete.step_inst(&mut status).unwrap();
     let mut status = interprete.step_inst(&mut status).unwrap();
@@ -294,7 +294,7 @@ fn test_avanza() {
     let mut status = interprete.step_inst(&mut status).unwrap();
     let mut status = interprete.step_inst(&mut status).unwrap();
     let mut status = interprete.step_inst(&mut status).unwrap();
-    assert_eq!(status.get_pos(), (0, 2));
+    assert_eq!(status.get_pos(), (2, 0));
     let mut status = interprete.step_inst(&mut status).unwrap();
     let mut status = interprete.step_inst(&mut status).unwrap();
     let mut status = interprete.step_inst(&mut status).unwrap();
@@ -332,7 +332,7 @@ fn test_comment() {
     let mut tank_status = TankStatus::default();
     tank_status.set_dir(TankDirection::East);
     let tank_status = interprete.step_inst(&tank_status).unwrap();
-    assert_eq!(tank_status.get_pos(), (1, 0));
+    assert_eq!(tank_status.get_pos(), (0, 1));
     let tank_status = interprete.step_inst(&tank_status).unwrap();
     assert_eq!(tank_status.get_dir(), TankDirection::South);
     interprete.step_inst(&tank_status).unwrap();
@@ -341,14 +341,14 @@ fn test_comment() {
 
 #[test]
 fn test_radar() {
-    // (0,0)
+    // (0,0) N
     let mut status = TankStatus::default();
     assert_eq!(status.calc_radar(), 0);
     status.set_pos(3, 5);
     status.set_dir(TankDirection::West);
-    assert_eq!(status.calc_radar(), 3);
-    status.set_dir(TankDirection::North);
     assert_eq!(status.calc_radar(), 5);
+    status.set_dir(TankDirection::North);
+    assert_eq!(status.calc_radar(), 3);
 
     let mut interprete = Interpreter::new(
         "
@@ -369,18 +369,18 @@ fn test_radar() {
     let status = interprete.step_inst(&status).unwrap();
     let status = interprete.step_inst(&status).unwrap();
     let status = interprete.step_inst(&status).unwrap();
-    assert_eq!(interprete.get_var_value("x").unwrap(), 3);
+    assert_eq!(interprete.get_var_value("x").unwrap(), 1);
 
-    let status = interprete.step_inst(&status).unwrap();
-    let status = interprete.step_inst(&status).unwrap();
-    assert_eq!(interprete.get_var_value("x").unwrap(), 8);
-
-    let status = interprete.step_inst(&status).unwrap();
-    let status = interprete.step_inst(&status).unwrap();
-    assert_eq!(interprete.get_var_value("x").unwrap(), 8);
-
-    let status = interprete.step_inst(&status).unwrap();
     let status = interprete.step_inst(&status).unwrap();
     let status = interprete.step_inst(&status).unwrap();
     assert_eq!(interprete.get_var_value("x").unwrap(), 6);
+
+    let status = interprete.step_inst(&status).unwrap();
+    let status = interprete.step_inst(&status).unwrap();
+    assert_eq!(interprete.get_var_value("x").unwrap(), 10);
+
+    let status = interprete.step_inst(&status).unwrap();
+    let status = interprete.step_inst(&status).unwrap();
+    let status = interprete.step_inst(&status).unwrap();
+    assert_eq!(interprete.get_var_value("x").unwrap(), 8);
 }

@@ -13,15 +13,18 @@ pub enum TankDirection {
 #[derive(Copy, Clone, Debug)]
 #[wasm_bindgen]
 pub struct TankStatus {
-    // (x,y)
+    // (i,j)
     pos: (usize, usize),
     direction: TankDirection,
     // 0 - 100
     health: usize,
     // if tank just shot
     shot: bool,
+    // if tank got shot
+    got_shot: bool,
     ammo_small: usize,
     ammo_big: usize,
+    current_interpreter_line: usize,
 }
 
 #[wasm_bindgen]
@@ -32,16 +35,16 @@ impl TankStatus {
     pub fn get_dir(&self) -> TankDirection {
         self.direction
     }
-    pub fn set_pos(&mut self, x: usize, y: usize) {
-        self.pos = (x, y);
+    pub fn set_pos(&mut self, i: usize, j: usize) {
+        self.pos = (i, j);
     }
     pub fn calc_radar(&self) -> isize {
-        let (new_x, new_y) = self.get_pos();
+        let (new_i, new_j) = self.get_pos();
         match self.get_dir() {
-            TankDirection::North => new_y,
-            TankDirection::West => new_x,
-            TankDirection::South => GRID_DIMMENSIONS - new_y - 1,
-            TankDirection::East => GRID_DIMMENSIONS - new_x - 1,
+            TankDirection::West => new_j,
+            TankDirection::North => new_i,
+            TankDirection::East => GRID_DIMMENSIONS - new_j - 1,
+            TankDirection::South => GRID_DIMMENSIONS - new_i - 1,
         }
         .try_into()
         .unwrap()
@@ -51,8 +54,18 @@ impl TankStatus {
         self.shot = shot;
     }
 
+    #[wasm_bindgen(getter)]
     pub fn shot(&self) -> bool {
         self.shot
+    }
+
+    #[wasm_bindgen(getter)]
+    pub fn got_shot(&self) -> bool {
+        self.got_shot
+    }
+
+    pub fn set_got_shot(&mut self, got_shot: bool) {
+        self.got_shot = got_shot;
     }
 
     pub fn apply_damage(&mut self, damage: usize) -> usize {
@@ -67,18 +80,36 @@ impl TankStatus {
             direction: TankDirection::North,
             health: 100,
             shot: false,
+            got_shot: false,
             ammo_small: 10000,
             ammo_big: 100,
+            current_interpreter_line: 0,
         }
     }
 
+    #[wasm_bindgen(constructor)]
+    pub fn new(i: usize, j: usize) -> Self {
+        let mut status = Self::default();
+        status.set_pos(i, j);
+        status
+    }
+
     #[wasm_bindgen(getter)]
-    pub fn pos_x(&self) -> usize {
+    pub fn current_interpreter_line(&self) -> usize {
+        self.current_interpreter_line
+    }
+
+    pub fn set_current_interpreter_line(&mut self, line: usize) {
+        self.current_interpreter_line = line;
+    }
+
+    #[wasm_bindgen(getter)]
+    pub fn pos_i(&self) -> usize {
         self.pos.0
     }
 
     #[wasm_bindgen(getter)]
-    pub fn pos_y(&self) -> usize {
+    pub fn pos_j(&self) -> usize {
         self.pos.1
     }
 }

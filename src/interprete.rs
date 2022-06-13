@@ -155,36 +155,38 @@ impl<'a> Interpreter<'a> {
                 Ok(new_status)
             }
             Rule::avanza => {
-                let (old_x, old_y) = current_status.get_pos();
-                let (new_x, new_y) = match current_status.get_dir() {
-                    TankDirection::North => (old_x, old_y.saturating_sub(1)),
-                    TankDirection::West => (old_x.saturating_sub(1), old_y),
-                    TankDirection::South => (
-                        old_x,
-                        if old_y + 1 == GRID_DIMMENSIONS {
-                            old_y
+                let (old_i, old_j) = current_status.get_pos();
+                let (new_i, new_j) = match current_status.get_dir() {
+                    TankDirection::West => (old_i, old_j.saturating_sub(1)),
+                    TankDirection::North => (old_i.saturating_sub(1), old_j),
+                    TankDirection::East => (
+                        old_i,
+                        if old_j + 1 == GRID_DIMMENSIONS {
+                            old_j
                         } else {
-                            old_y + 1
+                            old_j + 1
                         },
                     ),
-                    TankDirection::East => (
-                        if old_x + 1 == GRID_DIMMENSIONS {
-                            old_x
+                    TankDirection::South => (
+                        if old_i + 1 == GRID_DIMMENSIONS {
+                            old_i
                         } else {
-                            old_x + 1
+                            old_i + 1
                         },
-                        old_y,
+                        old_j,
                     ),
                 };
 
                 let mut new_status = *current_status;
-                new_status.set_pos(new_x, new_y);
+                new_status.set_pos(new_i, new_j);
+                new_status.set_current_interpreter_line(current_line);
                 self.scope.set_scope_var(RADAR, new_status.calc_radar());
                 Ok(new_status)
             }
             Rule::dispara => {
                 let mut new_status = *current_status;
                 new_status.set_shot(true);
+                new_status.set_current_interpreter_line(current_line);
                 Ok(new_status)
             }
             Rule::EOI => Ok(*current_status),
@@ -205,7 +207,7 @@ impl<'a> Interpreter<'a> {
             match ctx {
                 ExecutionContext::Block => {
                     self.exec_stack.push((current_exec_block, ctx));
-                    Ok(TankStatus::default())
+                    Ok(*current_status)
                 }
                 ExecutionContext::IfBlock => {
                     self.scope.drop();
