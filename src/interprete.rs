@@ -42,6 +42,7 @@ impl<'a> Interpreter<'a> {
         pair: Pair<'a, Rule>,
         current_status: &TankStatus,
     ) -> Result<TankStatus, ErrorInterprete> {
+        let (current_line, _current_col) = pair.as_span().start_pos().line_col();
         println!("Descending");
         dbg!(&pair.as_rule());
         match pair.as_rule() {
@@ -58,19 +59,23 @@ impl<'a> Interpreter<'a> {
                 let var_name = decl_pairs.next().unwrap().as_str();
                 let expr = decl_pairs.next().unwrap();
                 let valor = eval(expr.into_inner(), &self.scope)?;
-                self.scope.define_new_scope_var(var_name.into(), valor);
-                Ok(*current_status)
+                self.scope.define_new_scope_var(var_name, valor);
+                let mut new_status = *current_status;
+                new_status.set_current_interpreter_line(current_line);
+                Ok(new_status)
             }
             Rule::asig => {
                 let mut asig_pairs = pair.into_inner();
                 let var_name = asig_pairs.next().unwrap().as_str();
                 let expr = asig_pairs.next().unwrap();
                 let valor = eval(expr.into_inner(), &self.scope)?;
-                let found = self.scope.set_scope_var(var_name.into(), valor);
+                let found = self.scope.set_scope_var(var_name, valor);
                 if !found {
                     Err(ErrorInterprete::VarNoDecl(var_name.into()))
                 } else {
-                    Ok(*current_status)
+                    let mut new_status = *current_status;
+                    new_status.set_current_interpreter_line(current_line);
+                    Ok(new_status)
                 }
             }
             Rule::bloque_si => {
@@ -93,7 +98,9 @@ impl<'a> Interpreter<'a> {
                             .push((instrucciones, ExecutionContext::IfBlock));
                         self.step_inst(current_status)
                     } else {
-                        Ok(*current_status)
+                        let mut new_status = *current_status;
+                        new_status.set_current_interpreter_line(current_line);
+                        Ok(new_status)
                     }
                 }
             }
@@ -116,7 +123,9 @@ impl<'a> Interpreter<'a> {
                     ));
                     self.step_inst(current_status)
                 } else {
-                    Ok(*current_status)
+                    let mut new_status = *current_status;
+                    new_status.set_current_interpreter_line(current_line);
+                    Ok(new_status)
                 }
             }
             Rule::gira => {
@@ -141,6 +150,7 @@ impl<'a> Interpreter<'a> {
 
                 let mut new_status = *current_status;
                 new_status.set_dir(new_dir);
+                new_status.set_current_interpreter_line(current_line);
                 self.scope.set_scope_var(RADAR, new_status.calc_radar());
                 Ok(new_status)
             }
